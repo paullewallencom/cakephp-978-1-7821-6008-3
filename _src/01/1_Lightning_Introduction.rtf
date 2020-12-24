@@ -1,0 +1,413 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14040\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri-618
+
+\f0\fs20 \cf0 CREATE TABLE products (\
+  id VARCHAR(36) NOT NULL,\
+  name VARCHAR(100),\
+  details TEXT,\
+  available TINYINT(1) UNSIGNED DEFAULT 1,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO products (id, name, details, available, created, modified)\
+VALUES\
+('535c460a-f230-4565-8378-7cae01314e03', 'Cake', 'Yummy and sweet', 1, NOW(), NOW()),\
+('535c4638-c708-4171-985a-743901314e03', 'Cookie', 'Browsers love cookies', 1, NOW(), NOW()),\
+('535c49d9-917c-4eab-854f-743801314e03', 'Helper', 'Helping you all the way', 1, NOW(), NOW());\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class ProductsController extends AppController \{\
+\
+  public $helpers = array('Html', 'Form');\
+\
+  public $components = array('Session', 'Paginator');\
+\
+\}\
+\
+---\
+\
+public $paginate = array(\
+  'limit' => 10\
+);\
+\
+---\
+\
+public function index() \{\
+  $this->Product->recursive = -1;\
+  $this->set('products', $this->paginate());\
+\}\
+\
+---\
+\
+<h2><?php echo __('Products'); ?></h2>\
+<table>\
+  <tr>\
+    <th><?php echo $this->Paginator->sort('id'); ?></th>\
+    <th><?php echo $this->Paginator->sort('name'); ?></th>\
+    <th><?php echo $this->Paginator->sort('created'); ?></th>\
+  </tr>\
+  <?php foreach ($products as $product): ?>\
+    <tr>\
+      <td><?php echo $product['Product']['id']; ?></td>\
+      <td>\
+        <?php\
+        echo $this->Html->link($product['Product']['name'], array('controller' => 'products', 'action' => 'view', $product['Product']['id']));\
+        ?>\
+      </td>\
+      <td><?php echo $this->Time->nice($product['Product']['created']); ?></td>\
+    </tr>\
+  <?php endforeach; ?>\
+</table>\
+<div>\
+  <?php echo $this->Paginator->counter(array('format' => __('Page \{:page\} of \{:pages\}, showing \{:current\} records out of \{:count\} total, starting on record \{:start\}, ending on \{:end\}'))); ?>\
+</div>\
+<div>\
+  <?php\
+  echo $this->Paginator->prev(__('< previous'), array(), null, array('class' => 'prev disabled'));\
+  echo $this->Paginator->numbers(array('separator' => ''));\
+  echo $this->Paginator->next(__('next >'), array(), null, array('class' => 'next disabled'));\
+  ?>\
+</div>\
+\
+---\
+\
+public function view($id) \{\
+  if (!($product = $this->Product->findById($id))) \{\
+    throw new NotFoundException(__('Product not found'));\
+  \}\
+  $this->set(compact('product'));\
+\}\
+\
+---\
+\
+<h2><?php echo h($product['Product']['name']); ?></h2>\
+<p>\
+  <?php echo h($product['Product']['details']); ?>\
+</p>\
+<dl>\
+  <dt><?php echo __('Available'); ?></dt>\
+  <dd><?php echo __((bool)$product['Product']['available'] ? 'Yes' : 'No'); ?></dd>\
+  <dt><?php echo __('Created'); ?></dt>\
+  <dd><?php echo $this->Time->nice($product['Product']['created']); ?></dd>\
+  <dt><?php echo __('Modified'); ?></dt>\
+  <dd><?php echo $this->Time->nice($product['Product']['modified']); ?></dd>\
+</dl>\
+\
+---\
+\
+Array\uc0\u8232 (\u8232   [0] => Array\u8232   (\u8232     [Product] => Array\u8232     (\u8232       [id] => 535c460a-f230-4565-8378-7cae01314e03\u8232       [name] => Cake\u8232       [details] => Yummy and sweet\u8232       [available] => true\
+      [created] => 2014-06-12 15:55:32\uc0\u8232       [modified] => 2014-06-12 15:55:32\u8232     )\u8232   )\u8232   [1] => Array\u8232   (\u8232     [Product] => Array\u8232     (\u8232       [id] => 535c4638-c708-4171-985a-743901314e03\u8232       [name] => Cookie\u8232       [details] => Browsers love cookies\
+      [available] => true\uc0\u8232       [created] => 2014-06-12 15:55:33\u8232       [modified] => 2014-06-12 15:55:33\u8232     )\u8232   )\u8232   [2] => Array\u8232   (\u8232     [Product] => Array\u8232     (\u8232       [id] => 535c49d9-917c-4eab-854f-743801314e03\u8232       [name] => Helper\u8232       [details] => Helping you all the way\
+      [available] => true\uc0\u8232       [created] => 2014-06-12 15:55:34\u8232       [modified] => 2014-06-12 15:55:34\u8232     )\u8232   )\u8232 )\
+\
+---\
+\
+public function add() \{\
+  if ($this->request->is('post')) \{\
+    $this->Product->create();\
+    if ($this->Product->save($this->request->data)) \{\
+      $this->Session->setFlash(__('New product created'));\
+      return $this->redirect(array('action' => 'index'));\
+    \}\
+    $this->Session->setFlash(__('Could not create product'));\
+  \}\
+\}\
+\
+---\
+\
+public function edit($id) \{\
+  $product = $this->Product->findById($id);\
+  if (!$product) \{\
+    throw new NotFoundException(__('Product not found'));\
+  \}\
+  if ($this->request->is('post')) \{\
+    $this->Product->id = $id;\
+    if ($this->Product->save($this->request->data)) \{\
+      $this->Session->setFlash(__('Product updated'));\
+      return $this->redirect(array('action' => 'index'));\
+    \}\
+    $this->Session->setFlash(__('Could not update product'));\
+  \} else \{\
+    $this->request->data = $product;\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+echo $this->Form->create('Product');\
+echo $this->Form->inputs();\
+echo $this->Form->end(__('Submit'));\
+\
+---\
+\
+<?php echo $this->element('Products/form'); ?>\
+\
+---\
+\
+<?php echo $this->element('Products/form'); ?>\
+\
+---\
+\
+<h2><?php echo __('Products'); ?></h2>\
+<div>\
+  <?php echo $this->Html->link(__('Add new product'), array('action' => 'add')); ?>\
+</div>\
+<table>\
+  <tr>\
+    <th><?php echo $this->Paginator->sort('id'); ?></th>\
+    <th><?php echo $this->Paginator->sort('name'); ?></th>\
+    <th><?php echo $this->Paginator->sort('created'); ?></th>\
+    <th><?php echo __('Actions'); ?></th>\
+  </tr>\
+  <?php foreach ($products as $product): ?>\
+    <tr>\
+      <td><?php echo $product['Product']['id']; ?></td>\
+      <td><?php echo $this->Html->link($product['Product']['name'], array('action' => 'view', $product['Product']['id'])); ?></td>\
+      <td><?php echo $this->Time->nice($product['Product']['created']); ?></td>\
+      <td><?php echo $this->Html->link(__('Edit'), array('action' => 'edit', $product['Product']['id'])); ?></td>\
+    </tr>\
+  <?php endforeach; ?>\
+</table>\
+<div>\
+  <?php echo $this->Paginator->counter(array('format' => __('Page \{:page\} of \{:pages\}, showing \{:current\} records out of \{:count\} total, starting on record \{:start\}, ending on \{:end\}'))); ?>\
+</div>\
+<div>\
+  <?php\
+  echo $this->Paginator->prev(__('< previous'), array(), null, array('class' => 'prev disabled'));\
+  echo $this->Paginator->numbers(array('separator' => ''));\
+  echo $this->Paginator->next(__('next >'), array(), null, array('class' => 'next disabled'));\
+  ?>\
+</div>\
+\
+---\
+\
+public function delete($id) \{\
+  if (!$this->request->is('post')) \{\
+    throw new MethodNotAllowedException();\
+  \}\
+  if ($this->Product->delete($id)) \{\
+    $this->Session->setFlash(__('Product removed: %s', $id));\
+    return $this->redirect(array('action' => 'index'));\
+  \}\
+  $this->Session->setFlash(__('Could not remove product'));\
+  $this->redirect($this->referer());\
+\}\
+\
+---\
+\
+<h2><?php echo __('Products'); ?></h2>\
+<div>\
+  <?php echo $this->Html->link(__('Add new product'), array('action' => 'add')); ?>\
+</div>\
+<table>\
+  <tr>\
+    <th><?php echo $this->Paginator->sort('id'); ?></th>\
+    <th><?php echo $this->Paginator->sort('name'); ?></th>\
+    <th><?php echo $this->Paginator->sort('created'); ?></th>\
+    <th><?php echo __('Actions'); ?></th>\
+  </tr>\
+  <?php foreach ($products as $product): ?>\
+    <tr>\
+      <td><?php echo $product['Product']['id']; ?></td>\
+      <td><?php echo $this->Html->link($product['Product']['name'], array('action' => 'view', $product['Product']['id'])); ?></td>\
+      <td><?php echo $this->Time->nice($product['Product']['created']); ?></td>\
+      <td>\
+        <?php\
+        echo $this->Html->link(__('Edit'), array('action' => 'edit', $product['Product']['id']));\
+        echo $this->Form->postLink(__('Delete'), array('action' => 'delete', $product['Product']['id']), array('confirm' => 'Delete this product?'));\
+        ?>\
+      </td>\
+    </tr>\
+  <?php endforeach; ?>\
+</table>\
+<div>\
+  <?php echo $this->Paginator->counter(array('format' => __('Page \{:page\} of \{:pages\}, showing \{:current\} records out of \{:count\} total, starting on record \{:start\}, ending on \{:end\}'))); ?>\
+</div>\
+<div>\
+  <?php\
+  echo $this->Paginator->prev(__('< previous'), array(), null, array('class' => 'prev disabled'));\
+  echo $this->Paginator->numbers(array('separator' => ''));\
+echo $this->Paginator->next(__('next >'), array(), null, array('class' => 'next disabled'));\
+  ?>\
+</div>\
+\
+---\
+\
+CREATE TABLE users (\
+  id VARCHAR(36) NOT NULL,\
+  username VARCHAR(20),\
+  password VARCHAR(100),\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+App::uses('SimplePasswordHasher', 'Controller/Component/Auth');\
+    \
+class User extends AppModel \{\
+\}\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+    \
+class UsersController extends AppController \{\
+\}\
+\
+---\
+\
+public $validate = array(\
+  'username' => array(\
+    'required' => array(\
+      'rule' => 'notEmpty',\
+      'message' => 'Please enter a username'\
+    )\
+  ),\
+  'password' => array(\
+    'required' => array(\
+      'rule' => 'notEmpty',\
+      'message' => 'Please enter a password'\
+    )\
+  )\
+);\
+\
+---\
+\
+public function beforeSave($options = array()) \{\
+  if (!parent::beforeSave($options)) \{\
+    return false;\
+  \}\
+  if (isset($this->data[$this->alias]['password'])) \{\
+    $hasher = new SimplePasswordHasher();\
+    $this->data[$this->alias]['password'] = $hasher->hash($this->data[$this->alias]['password']);\
+  \}\
+  return true;\
+\}\
+\
+---\
+\
+public $components = array(\
+  'Session',\
+  'Auth' => array(\
+    'loginRedirect' => array('controller' => 'products'),\
+    'logoutRedirect' => array(\
+      'controller' => 'users',\
+      'action' => 'login'\
+    )\
+  )\
+);\
+\
+---\
+\
+public function beforeFilter() \{\
+  parent::beforeFilter();\
+  $this->Auth->allow();\
+\}\
+\
+public function register() \{\
+  if ($this->request->is('post')) \{\
+    $this->User->create();\
+    if ($this->User->save($this->request->data)) \{\
+      $this->Session->setFlash(__('New user registered'));\
+      return $this->redirect(array('action' => 'login'));\
+    \}\
+    $this->Session->setFlash(__('Could not register user'));\
+  \}\
+\}\
+\
+public function login() \{\
+  if ($this->request->is('post')) \{\
+    if ($this->Auth->login()) \{\
+      return $this->redirect($this->Auth->redirectUrl());\
+    \}\
+    $this->Session->setFlash(__('Incorrect username or password'));\
+  \}\
+\}\
+\
+public function logout() \{\
+  return $this->redirect($this->Auth->logout());\
+\}\
+\
+---\
+\
+<h2><?php echo __('Register'); ?></h2>\
+<?php\
+echo $this->Form->create('User');\
+echo $this->Form->inputs();\
+echo $this->Form->end(__('Register'));\
+\
+---\
+\
+<h2><?php echo __('Login'); ?></h2>\
+<?php\
+echo $this->Session->flash('auth');\
+echo $this->Form->create('User');\
+echo $this->Form->inputs(array(\
+  'username',\
+  'password',\
+  'legend' => __('Login, please')\
+));\
+echo $this->Form->end(__('Sign In'));\
+\
+---\
+\
+$ git clone https://github.com/cakephp/debug_kit.git Plugin/DebugKit\
+\
+---\
+\
+$ git submodule add https://github.com/cakephp/debug_kit.git app/Plugin/DebugKit\
+\
+---\
+\
+\{\
+  \'93require\'94: \{\
+    \'93cakephp/debug_kit\'94: \'932.2.*\'94\
+  \}\
+\}\
+\
+---\
+\
+https://github.com/cakephp/debug_kit/archive/master.zip\
+\
+---\
+\
+CakePlugin::load('DebugKit');\
+\
+---\
+\
+public $components = array(\
+  'Session',\
+  'Auth',\
+  'DebugKit.Toolbar'\
+);\
+\
+---\
+\
+Configure::write('debug', 2);\
+\
+---\
+\
+CakePlugin::load('Reports', array(\
+  'bootstrap' => true,\
+  'routes' => true\
+));\
+\
+}

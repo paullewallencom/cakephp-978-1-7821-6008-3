@@ -1,0 +1,391 @@
+Router::parseExtensions('json');
+---
+
+public $components = array('RequestHandler');
+---
+
+public function listing() {
+  $books = $this->Book->find('all', array('fields' => array('name', 'stock')));
+  $this->set(array(
+    'books' => Hash::extract($books, '{n}.Book'),
+    '_serialize' => array('books')
+  ));
+}
+---
+
+public function listing() {
+  $books = $this->Book->find('all', array('fields' => array('name', 'stock')));
+  $this->set(array(
+    'books' => Hash::extract($books, '{n}.Book'),
+    '_serialize' => array('books')
+  ));
+}
+---
+
+{‘books’:[{‘title’:’1984’,’author’:’George Orwell’},{‘title’:’Neuromancer’,’author’:’William Gibson’},{‘title’:’The Cuckoo\’s Egg’,’author’:’Cliff Stoll’}]}
+{
+  "books": [
+    {
+      "name": "CakePHP Application",
+      "stock": "2"
+    },
+    {
+      "name": "PHP for Beginners",
+      "stock": "3"
+    },
+    {
+      "name": "Server Administration",
+      "stock": "0"
+    }
+  ]
+}
+---
+
+public function beforeFilter() {
+  parent::beforeFilter();
+  if ($this->request->is('ajax')) {
+    $this->response->disableCache();
+  }
+}
+---
+
+public function inventory_index() {
+  $this->set(‘books’, $this->Book->find(‘all’));
+}
+---
+
+public function inventory_update() {
+  $this->request->allowMethod('ajax');
+  if (!$this->request->is('post')
+    || !isset($this->request->data['id'])
+    || !$this->Book->hasAny(array('id' => $this->request->data['id']))
+    || !isset($this->request->data['stock'])
+    || !is_numeric($this->request->data['stock'])
+  ) {
+    throw new BadRequestException();
+  }
+  $this->autoRender = false;
+  $this->Book->id = $this->request->data['id'];
+  $this->Book->saveField('stock', $this->request->data['stock']);
+  return true;
+}
+---
+
+<?php
+  $this->Html->script('https://code.jquery.com/jquery-2.1.1.min.js', array('block' => 'script'));
+?>
+<h2><?php echo __('Books stock'); ?></h2>
+<ul>
+  <?php foreach ($books as $book): ?>
+    <li>
+      <?php echo h($book['Book']['name']); ?>:
+      <input id="<?php echo $book['Book']['id']; ?>" name="stock" type="text" value="<?php echo $book['Book']['stock']; ?>"/>
+      <?php
+      echo $this->Html->scriptBlock(
+        '$("#' . $book['Book']['id'] . '").keyup(function(e) { if (e.keyCode === 13) { update($(this)); } });'
+      );
+      ?>
+    </li>
+  <?php endforeach; ?>
+</ul>
+<?php
+$url = $this->Html->url(array('action' => 'update'));
+$success = __('Updated!');
+$error = __('Could not update stock');
+$script = <<<JS
+function update(node) {
+  var stock = node.val();
+  if (stock === '' || stock.match(/[^\d]+/)) {
+    node.val('0');
+    stock = '0';
+  }
+  var data = {
+    id: node.attr('id'),
+    stock: stock
+  };
+  $.post("$url", data)
+    .done(function() { alert("$success"); })
+    .fail(function() { alert("$error"); });
+}
+JS;
+
+$this->Html->scriptBlock($script, array('block' => 'script'));
+---
+
+public function respond() {
+  if (!$this->request->query('text')) {
+    $this->response->statusCode(404);
+  }
+  $this->response->header('X-Timestamp', date('H:i:s'));
+  $this->response->type('txt');
+  $this->response->body($this->request->query('text'));
+  $this->response->send();
+  $this->_stop();
+}
+---
+
+CREATE TABLE uploads (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  size INT(4) UNSIGNED NOT NULL,
+  mime VARCHAR(50) NOT NULL,
+  path TEXT NOT NULL,
+  created DATETIME,
+  modified DATETIME,
+  PRIMARY KEY(id)
+);
+---
+
+<?php
+App::uses('AppModel', 'Model');
+
+class Upload extends AppModel {
+}
+---
+
+<?php
+App::uses('AppController', 'Controller');
+
+class UploadsController extends AppController {
+}
+---
+
+public function index() {
+  $this->set('uploads', $this->Upload->find('all'));
+}
+---
+
+public function upload() {
+  if ($this->request->is('post')) {
+    $this->Upload->create();
+    if ($this->Upload->save($this->request->data)) {
+      $this->Session->setFlash(__('New file uploaded'));
+      return $this->redirect(array('action' => 'index'));
+    }
+    $this->Session->setFlash(__('Could not upload file'));
+  }
+}
+---
+
+protected function _processFile() {
+  $file = $this->data['Upload']['file'];
+  if ($file['error'] === UPLOAD_ERR_OK) {
+    $name = md5($file['name']);
+    $path = WWW_ROOT . 'files' . DS . $name;
+    if (is_uploaded_file($file['tmp_name'])
+      && move_uploaded_file($file['tmp_name'], $path)
+    ) {
+      $this->data['Upload']['name'] = $file['name'];
+      $this->data['Upload']['size'] = $file['size'];
+      $this->data['Upload']['mime'] = $file['type'];
+      $this->data['Upload']['path'] = '/files/' . $name;
+      unset($this->data['Upload']['file']);
+      return true;
+    }
+  }
+  return false;
+}
+---
+
+public function beforeSave() {
+  if (!parent::beforeSave($options)) {
+    return false;
+  }
+  return $this->_processFile();
+}
+---
+
+<h2><?php echo __('Uploads'); ?></h2>
+<p>
+  <?php echo $this->Html->link(__('Upload'), array('action' => 'upload')); ?>
+</p>
+<table>
+  <tr>
+    <th><?php echo __('Name'); ?></th>
+    <th><?php echo __('Uploaded'); ?></th>
+  </tr>
+  <?php foreach ($uploads as $upload): ?>
+  <tr>
+    <td>
+      <?php
+        echo $this->Html->link($upload['Upload']['name'], $upload['Upload']['path'], array('target' => '_blank'));
+      ?>
+    </td>
+    <td>
+      <?php
+        echo $this->Time->nice($upload['Upload']['created']);
+      ?>
+    </td>
+  </tr>
+  <?php endforeach; ?>
+</table>
+---
+
+<h2><?php echo __('Upload file'); ?></h2>
+<?php
+  echo $this->Form->create('Upload', array('type' => 'file'));
+  echo $this->Form->file('file');
+  echo $this->Form->end(__('Upload'));
+---
+
+<?php
+App::uses('AppController', 'Controller');
+
+class ApiController extends AppController {
+}
+---
+
+public function __construct($request = null, $response = null) {
+  parent::__construct($request, $response);
+
+  $this->request->addDetector('verified', array(
+    'callback' => function ($request) {
+        $header = $request->header('X-Api-Key');
+        return ($header === Configure::read('Api.key'));
+    }
+  ));
+}
+---
+
+public function beforeFilter() {
+  parent::beforeFilter();
+
+  $this->Components->disable(array('Auth', 'Session'));
+
+  if (!$this->request->is('verified')) {
+    throw new ForbiddenException('Request not verified');
+  }
+}
+---
+
+public $components = array(
+  'Cookie' => array(
+    'time' => '+1 day'
+  )
+);
+---
+
+public function cookie() {
+  $value = __('No value defined');
+  if ($this->Cookie->check('value')) {
+    $value = $this->Cookie->read('value');
+  }
+  $this->set('value', $value);
+}
+---
+
+public function cookie_update($value) {
+  $this->Cookie->write('value', $value);
+  $this->redirect(array('action' => 'cookie'));
+}
+---
+
+public function cookie_remove() {
+  $this->Cookie->delete('value');
+  $this->redirect(array('action' => 'cookie'));
+}
+---
+
+<h2>Cookie example</h2>
+<p>
+  Value: <?php echo h($value); ?>
+</p>
+---
+
+<?php
+App::uses('AppController', 'Controller');
+
+class CacheController extends AppController {
+
+  public $autoRender = false;
+}
+---
+
+public function cached() {
+  $this->response->cache('-1 hour', '+1 day');
+  return __('I am cached!');
+}
+---
+
+public function expire() {
+  $this->response->expires('+2 days');
+  return __('We all expire');
+}
+---
+
+public function modified() {
+  $record = array(
+    'content' => __('Some old content'),
+    'modified' => '2013-08-29 17:31:49'
+  );
+  $this->response->modified($record['modified']);
+  if ($this->response->checkNotModified($this->request)) {
+    return $this->response;
+  }
+  return $record['content'];
+}
+---
+
+public function etagged() {
+  $record = array(
+    'content' => __('Some old content'),
+    'modified' => '2013-08-29 17:31:49'
+  );
+  $this->response->etag(md5($record['content']));
+  if ($this->response->checkNotModified($this->request)) {
+    return $this->response;
+  }
+  return $record['content'];
+}
+---
+
+public function cache_control() {
+  $this->response->sharable(true, 86400);
+  return __('Caching under control');
+}
+---
+
+public $components = array(
+  'RequestHandler' => array(
+    'checkHttpCache' => false
+  )
+);
+---
+
+<?php
+App::uses('AppController', 'Controller');
+
+class BrokenController extends AppController {
+}
+---
+
+<?php
+class CustomException extends HttpException {
+
+  public function __construct($message = null, $code = 417, Exception $previous = null) {
+    if (empty($message)) {
+      $message = 'This is a custom error message';
+    }
+    parent::__construct($message, $code, $previous);
+  }
+}
+---
+
+<h2><?php echo $message; ?></h2>
+<p class=”error”>
+  <strong><?php echo __d('cake', 'Error'); ?>: </strong>
+  <?php echo __('Uh oh, it looks like something went wrong!'); ?>
+</p>
+<?php
+if (Configure::read('debug') > 0) {
+  echo $this->element('exception_stack_trace');
+}
+---
+
+<?php
+App::uses('CustomException', 'Error');
+---
+
+public function index() {
+  throw new CustomException(__('Break all the things'));
+}

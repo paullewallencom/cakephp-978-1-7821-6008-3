@@ -1,0 +1,562 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab360
+\pard\pardeftab360\li360\ri-618
+
+\f0\fs20 \cf0 CREATE TABLE posts (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  title VARCHAR(255) NOT NULL,\
+  content TEXT,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO posts (title, content, created, modified)\
+VALUES\
+('Baking cakes', 'Baking is easy with CakePHP', NOW(), NOW()),\
+('How to create cookies', 'Browsers love cookies', NOW(), NOW()),\
+('Consuming a cake', 'Extra tasty with JSON', NOW(), NOW());\
+\
+---\
+\
+<?php\
+\
+App::uses('AppController', 'Controller');\
+\
+class PostsController extends AppController \{\
+\}\
+\
+---\
+\
+Router::mapResources('posts');\
+Router::parseExtensions();\
+\
+---\
+\
+public $components = array(\'91RequestHandler\'92);\
+\
+---\
+\
+public function index() \{\
+  $this->set(array(\
+    \'91posts\'92 => $this->Post->find(\'91all\'92),\
+    \'91_serialize\'92 => array(\'91posts\'92)\
+  ));\
+\}\
+\
+public function view($id) \{\
+  $this->set(array(\
+    \'91post\'92 => $this->Post->findById($id),\
+    \'91_serialize\'92 => array(\'91post\'92)\
+  ));\
+\}\
+\
+public function edit($id) \{\
+  $this->Post->id = $id;\
+  $status = $this->Post->save($this->request->data);\
+  $this->set(array(\
+    \'91status\'92 => ($status)? \'91Post updated\'92 : \'91Error updating post\'92,\
+    \'91_serialize\'92 => array(\'91status\'92)\
+  ));\
+\}\
+\
+public function delete($id) \{\
+  $status = $this->Post->delete($id);\
+  $this->set(array(\
+    \'91status\'92 => ($status)? \'91Post deleted\'92 : \'91Error deleting post\'92,\
+    \'91_serialize\'92 => array(\'91status\'92)\
+  ));\
+\}\
+\
+---\
+\
+Router::resourceMap(array(\
+  array(\'91action\'92 => \'91index\'92, \'91method\'92 => \'91GET\'92, \'91id\'92 => false),\
+  array(\'91action\'92 => \'91view\'92, \'91method\'92 => \'91GET\'92, \'91id\'92 => true),\
+  array(\'91action\'92 => \'91add\'92, \'91method\'92 => \'91POST', \'91id\'92 => false),\
+  array(\'91action\'92 => \'91edit\'92, \'91method\'92 => \'91PUT\'92, \'91id\'92 => true),\
+  array(\'91action\'92 => \'91delete\'92, \'91method\'92 => \'91DELETE\'92, \'91id\'92 => true)\
+));\
+\
+---\
+\
+$this->RequestHandler->addInputType('foo', array(function() \{\
+  // parsing logic for \'93foo\'94 input types\
+\}));\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class ApiController extends AppController \{\
+\}\
+\
+---\
+\
+Router::connect('/api/:object/:command', array(\
+  'controller' => 'api',\
+  'action' => 'delegate'\
+), array(\
+  'pass' => array(\
+    'object',\
+    'command'\
+  )\
+));\
+\
+---\
+\
+public function delegate($object, $command) \{\
+  $result = null;\
+  try \{\
+    if ($this->request->is('post') || $this->request->is('put')) \{\
+      $args = $this->request->data;\
+    \} else \{\
+      $args = $this->request->query;\
+    \}\
+    $component = Inflector::camelize($object);\
+    $this->\{$component\} = $this->Components->load($component);\
+    $this->\{$component\}->initialize($this);\
+    $action = Inflector::camelize($command);\
+    $return = $this->\{$component\}->\{$action\}($args);\
+    if ($this->\{$component\}->status === 'success') \{\
+      $result = $this->_success($return);\
+    \} else \{\
+      $result = $this->_fail($return);\
+    \}\
+  \} catch(Exception $e) \{\
+    $result = $this->_error($e->getMessage(), $e->getCode(), $result);\
+  \}\
+  $this->response->type('json');\
+  $this->response->statusCode(200);\
+  $this->response->body($result);\
+  $this->response->send();\
+  $this->_stop();\
+\}\
+\
+---\
+\
+protected function _format($status, $response = array()) \{\
+  $object = new stdClass();\
+  $object->status = $status;\
+  foreach ($response as $param => $value) \{\
+    $object->\{$param\} = $value;\
+  \}\
+  return json_encode($object);\
+\}\
+\
+protected function _success($data = null) \{\
+  return $this->_format('success', array('data' => $data));\
+\}\
+\
+protected function _fail($data = null) \{\
+  return $this->_format('fail', array('data' => $data));\
+\}\
+\
+protected function _error($message = 'Unknown', $code = 0, $data = array()) \{\
+  return $this->_format('error', array(\
+    'message' => $message,\
+    'code' => $code,\
+    'data' => $data\
+  ));\
+\}\
+\
+---\
+\
+<?php\
+App::uses('Component', 'Controller');\
+\
+class ExampleComponent extends Component \{\
+\
+  public $status = 'success';\
+\
+  public function hello($args) \{\
+    return 'Hello World';\
+  \}\
+\
+  public function say($args) \{\
+    if (empty($args['text'])) \{\
+      throw new Exception('Missing argument: text');\
+    \}\
+    return 'You said: ' . $args['text'];\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+App::uses('HttpSocket', 'Network/Http');\
+\
+class ServiceController extends AppController \{\
+\}\
+\
+---\
+\
+<?php\
+App::uses('HttpSocketResponse', 'Network/Http');\
+	\
+class JsonResponse extends HttpSocketResponse \{\
+\
+  public function __toString() \{\
+    return json_encode($this->body);\
+  \}\
+\
+  public function body() \{\
+    return $this->body;\
+  \}\
+\
+  public function isOk() \{\
+    if (parent::isOk()) \{\
+      return ($this->body['status'] === 'success');\
+    \}\
+    return false;\
+  \}\
+\
+  public function parseResponse($message) \{\
+    parent::parseResponse($message);\
+    $this->body = json_decode($this->body, true);\
+  \}\
+\}\
+\
+---\
+\
+public function call($value) \{\
+  $config = array(\
+    'request' => array(\
+      'uri' => array(\
+        'host' => env('HTTP_HOST')\
+      )\
+    )\
+  );\
+  $http = new HttpSocket($config);\
+  $http = new HttpSocket();\
+  $http->responseClass = 'JsonResponse';\
+  $response = $http->get('/api/example/say', array('text' => $value));\
+  if ($response->isOk()) \{\
+    $this->set('result', $response->body['data']);\
+  \} else \{\
+    throw new CakeException('Web service error');\
+  \}\
+\}\
+\
+---\
+\
+<h2><?php echo __('Service Response'); ?></h2>\
+<p><?php echo $result; ?></p>\
+\
+---\
+\
+CREATE TABLE users (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  username VARCHAR(20) NOT NULL,\
+  password VARCHAR(100) NOT NULL,\
+  token VARCHAR(32) DEFAULT NULL,\
+  ip VARCHAR(45) DEFAULT NULL,\
+  created DATETIME DEFAULT NULL,\
+  modified DATETIME DEFAULT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses('Component', 'Controller');\
+App::uses('Security', 'Utility');\
+App::uses('ClassRegistry', 'Utility');\
+\
+class AccessComponent extends Component \{\
+\
+  public $components = array('Cookie');\
+\
+  public $status = 'success';\
+\
+  public function register($args) \{\
+    if (empty($args['username'])) \{\
+      throw new Exception('Missing argument: username');\
+    \}\
+    if (empty($args['password'])) \{\
+      throw new Exception('Missing argument: password');\
+    \}\
+    $User = ClassRegistry::init('User');\
+    $User->create();\
+\
+    return $User->save(array(\
+      'username' => $args['username'],\
+      'password' => Security::hash($args['password'], null, true)\
+    ));\
+  \}\
+\
+  public function login($args) \{\
+    if (empty($args['username'])) \{\
+      throw new Exception('Missing argument: username');\
+    \}\
+    if (empty($args['password'])) \{\
+      throw new Exception('Missing argument: password');\
+    \}\
+    $User = ClassRegistry::init('User');\
+    $data = $User->find('first', array(\
+      'conditions' => array(\
+        'User.username' => $args['username'],\
+        'User.password' => Security::hash($args['password'], null, true)\
+      )\
+    ));\
+    if (!empty($data)) \{\
+      if (empty($data['User']['token'])) \{\
+        $request = $this->_Collection->getController()->request;\
+        $data['User']['token'] = md5(uniqid());\
+        $data['User']['ip'] = $request->clientIp(false);\
+        $User->save($data);\
+      \}\
+      $this->Cookie->write('auth_token', $data['User']['token']);\
+\
+      return true;\
+    \}\
+\
+    return false;\
+  \}\
+\
+  public function logout($args) \{\
+    if ($this->Cookie->check('auth_token')) \{\
+      $request = $this->_Collection->getController()->request;\
+      $User = ClassRegistry::init('User');\
+      $data = $User->find('first', array(\
+        'conditions' => array(\
+          'User.token' => $this->Cookie->read('auth_token'),\
+          'User.ip' => $request->clientIp(false)\
+        )\
+      ));\
+      if (!empty($data)) \{\
+        $data['User']['token'] = null;\
+        $data['User']['ip'] = null;\
+        $User->save($data);\
+        $this->Cookie->delete('auth_token');\
+\
+        return true;\
+      \}\
+    \}\
+\
+    return false;\
+  \}\
+\
+  public function validate($args) \{\
+    if ($this->Cookie->check('auth_token')) \{\
+      $request = $this->_Collection->getController()->request;\
+      $User = ClassRegistry::init('User');\
+      $data = $User->find('first', array(\
+        'conditions' => array(\
+          'User.token' => $this->Cookie->read('auth_token'),\
+          'User.ip' => $request->clientIp(false)\
+        )\
+      ));\
+      if (!empty($data)) \{\
+        return true;\
+      \}\
+    \}\
+\
+    return false;\
+  \}\
+\}\
+\
+---\
+\
+public function delegate($object, $command) \{\
+  $result = null;\
+  try \{\
+    if ($this->request->is('post') || $this->request->is('put')) \{\
+      $args = $this->request->data;\
+    \} else \{\
+      $args = $this->request->query;\
+    \}\
+    $component = Inflector::camelize($object);\
+    if ($component !== 'Access') \{\
+      $this->_validateAccess($args);\
+    \}\
+    $this->\{$component\} = $this->Components->load($component);\
+    $this->\{$component\}->initialize($this);\
+    $action = Inflector::camelize($command);\
+    $return = $this->\{$component\}->\{$action\}($args);\
+    if ($this->\{$component\}->status === 'success') \{\
+      $result = $this->_success($return);\
+    \} else \{\
+      $result = $this->_fail($return);\
+    \}\
+  \} catch (Exception $e) \{\
+    $result = $this->_error($e->getMessage(), $e->getCode(), $result);\
+  \}\
+  $this->response->type('json');\
+  $this->response->statusCode(200);\
+  $this->response->body($result);\
+  $this->response->send();\
+  $this->_stop();\
+\}\
+\
+---\
+\
+protected function _validateAccess($args) \{\
+  $this->Access = $this->Components->load('Access');\
+  if (!$this->Access->validate($args)) \{\
+    throw new ForbiddenException();\
+  \}\
+\}\
+\
+---\
+\
+Router::connect('/api/access/*', array(\
+  'controller' => 'api',\
+  'action' => 'delegate',\
+  '',\
+  'access'\
+));\
+\
+---\
+\
+Router::connect('/api/:version/:object/:command', array(\
+  'controller' => 'api',\
+  'action' => 'delegate'\
+), array(\
+  'pass' => array(\
+    'version',\
+    'object',\
+    'command'\
+  )\
+));\
+\
+---\
+\
+public function delegate($version, $object, $command) \{\
+  $result = null;\
+  try \{\
+    if ($this->request->is('post') || $this->request->is('put')) \{\
+      $args = $this->request->data;\
+    \} else \{\
+      $args = $this->request->query;\
+    \}\
+    $component = Inflector::camelize($object);\
+    if ($component !== 'Access') \{\
+      $this->_validateAccess($args);\
+      $component .= strtoupper($version);\
+    \}\
+    $this->\{$component\} = $this->Components->load($component);\
+    $this->\{$component\}->initialize($this);\
+    $action = Inflector::camelize($command);\
+    $return = $this->\{$component\}->\{$action\}($args);\
+    if ($this->\{$component\}->status === 'success') \{\
+      $result = $this->_success($return);\
+    \} else \{\
+      $result = $this->_fail($return);\
+    \}\
+  \} catch(Exception $e) \{\
+    $result = $this->_error($e->getMessage(), $e->getCode(), $result);\
+  \}\
+  $this->response->type('json');\
+  $this->response->statusCode(200);\
+  $this->response->body($result);\
+  $this->response->send();\
+  $this->_stop();\
+\}\
+\
+---\
+\
+<?php\
+App::uses('Component', 'Controller');\
+\
+class ExampleV1Component extends Component \{\
+\
+  public $status = 'success';\
+\
+  public function hello($args) \{\
+    return 'Hello World';\
+  \}\
+\
+  public function say($args) \{\
+    if (empty($args['text'])) \{\
+      throw new Exception('Missing argument: text');\
+    \}\
+    return 'You said: ' . $args['text'];\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('ExampleV1Component', 'Controller/Component');\
+\
+class ExampleV2Component extends ExampleV1Component \{\
+\
+  public function hello($args) \{\
+    return 'Hey there!';\
+  \}\
+\
+  public function foo($args) \{\
+    return 'bar';\
+  \}\
+\}\
+\
+---\
+\
+Router::connect('/api/:object/:command', array(\
+  'controller' => 'api',\
+  'action' => 'delegate'\
+), array(\
+  'pass' => array(\
+    'object',\
+    'command'\
+  )\
+));\
+\
+---\
+\
+public function delegate($object, $command) \{\
+  $result = null;\
+  try \{\
+    if ($this->request->is('post') || $this->request->is('put')) \{\
+      $args = $this->request->data;\
+    \} else \{\
+      $args = $this->request->query;\
+    \}\
+    $component = Inflector::camelize($object);\
+    if ($component !== 'Access') \{\
+      $this->_validateAccess($args);\
+      $version = $this->request->header('X-API-Version');\
+      $component .= strtoupper($version);\
+    \}\
+    $this->\{$component\} = $this->Components->load($component);\
+    $this->\{$component\}->initialize($this);\
+    $action = Inflector::camelize($command);\
+    $return = $this->\{$component\}->\{$action\}($args);\
+    if ($this->\{$component\}->status === 'success') \{\
+      $result = $this->_success($return);\
+    \} else \{\
+      $result = $this->_fail($return);\
+    \}\
+  \} catch (Exception $e) \{\
+    $result = $this->_error($e->getMessage(), $e->getCode(), $result);\
+  \}\
+  $this->response->type('json');\
+  $this->response->statusCode(200);\
+  $this->response->body($result);\
+  $this->response->send();\
+  $this->_stop();\
+\}\
+\
+---\
+\
+GET http://example.com/api/example/hello HTTP/1.1\
+Host: example.com\
+X-API-Version: v1\
+\
+---\
+\
+application/vnd.example.v1+json\
+\
+\
+\
+\
+\
+}

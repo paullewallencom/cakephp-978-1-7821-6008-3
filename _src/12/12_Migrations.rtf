@@ -1,0 +1,427 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri-618\sa50
+
+\f0\fs19 \cf0 CREATE TABLE profiles (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  title VARCHAR(100) NOT NULL,\
+  content TEXT,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses(\'91AppModel\'92, \'91Model\'92);\
+\
+class Profile extends AppModel \{\
+\}\
+\
+---\
+\
+$ Console/cake schema generate\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Cake Schema Shell\
+--------------------------------------------------------------\
+Generating Schema...\
+Schema file: schema.php generated\
+\
+---\
+\
+$ Console/cake schema view\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : skelapp\
+Path: /home/user/html/skelapp/\
+--------------------------------------------------------------\
+Cake Schema Shell\
+--------------------------------------------------------------\
+<?php\
+class SkelappSchema extends CakeSchema \{\
+\
+  public function before($event = array()) \{\
+    return true;\
+  \}\
+\
+  public function after($event = array()) \{\
+  \}\
+\
+  public $profiles = array(\
+    'id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false, 'key' => 'primary'),\
+    'title' => array('type' => 'string', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'charset' => 'utf8'),\
+    'content' => array('type' => 'text', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'charset' => 'utf8'),\
+    'created' => array('type' => 'datetime', 'null' => false, 'default' => null),\
+    'modified' => array('type' => 'datetime', 'null' => false, 'default' => null),\
+    'indexes' => array(\
+      'PRIMARY' => array('column' => 'id', 'unique' => 1)\
+    ),\
+    'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_general_ci', 'engine' => 'InnoDB')\
+  );\
+\}\
+\
+---\
+\
+$ Console/cake schema generate\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Cake Schema Shell\
+--------------------------------------------------------------\
+Generating Schema...\
+Schema file exists.\
+[O]verwrite\
+[S]napshot\
+[Q]uit\
+Would you like to do? (o/s/q)\
+[s] >\
+\
+---\
+\
+[s] > o\
+Schema file: schema.php generated \
+\
+---\
+\
+public $profiles = array(\
+  'id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false, 'key' => 'primary'),\
+  'title' => array('type' => 'string', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'charset' => 'utf8'),\
+  'content' => array('type' => 'text', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'charset' => 'utf8'),\
+  'created' => array('type' => 'datetime', 'null' => false, 'default' => null),\
+  'modified' => array('type' => 'datetime', 'null' => false, 'default' => null),\
+  'indexes' => array(\
+    'PRIMARY' => array('column' => 'id', 'unique' => 1)\
+  ),\
+\
+---\
+\
+$ Console/cake schema generate\
+\
+---\
+\
+$ Console/cake schema view\
+\
+---\
+\
+ALTER TABLE profiles CHANGE COLUMN title title VARCHAR(100) NOT NULL, ADD COLUMN date_published DATETIME NULL AFTER modified;\
+\
+--\
+\
+$ Console/cake schema generate\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Cake Schema Shell\
+--------------------------------------------------------------\
+Generating Schema...\
+Schema file exists.\
+[O]verwrite\
+[S]napshot\
+[Q]uit\
+Would you like to do? (o/s/q)\
+[s] > o\
+Schema file: schema.php generated\
+\
+---\
+\
+ALTER TABLE profiles DROP COLUMN date_published;\
+\
+---\
+\
+$ Console/cake schema update\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Cake Schema Shell\
+--------------------------------------------------------------\
+Comparing Database to Schema...\
+The following statements will run.\
+ALTER TABLE `myapp`.`profiles`\
+   ADD `date_published` datetime DEFAULT NULL AFTER `modified`;\
+Are you sure you want to alter the tables? (y/n)\
+[n] >\
+\
+---\
+\
+Are you sure you want to alter the tables? (y/n)\
+[n] > y\
+Updating Database...\
+profiles updated.\
+End update.\
+\
+---\
+\
+CakePlugin::load(\'91Migrations\'92);\
+\
+---\
+\
+$ Console/cake Migrations.migration status\
+\
+---\
+\
+$ Console/cake Migrations.migration generate\
+Cake Migration Shell\
+--------------------------------------------------------------\
+Do you want generate a dump from current database? (y/n)\
+\
+---\
+\
+[y] > y\
+--------------------------------------------------------------\
+Generating dump from current database...\
+Do you want to preview the file before generation? (y/n)\
+\
+---\
+\
+[y] > y\
+<?php\
+class PreviewMigration extends CakeMigration \{\
+\
+/**\
+ * Migration description\
+ *\
+ * @var string\
+ */\
+  public $description = '';\
+\
+/**\
+ * Actions to be performed\
+ *\
+ * @var array $migration\
+ */\
+  public $migration = array(\
+    'up' => array(\
+      'create_table' => array(\
+        'profiles' => array(\
+          'id' => array('type' => 'integer', 'null' => false, 'default' => null, 'unsigned' => false, 'key' => 'primary'),\
+          'title' => array('type' => 'string', 'null' => false, 'default' => null, 'length' => 255, 'collate' => 'utf8_general_ci', 'charset' => 'utf8'),\
+          'content' => array('type' => 'text', 'null' => false, 'default' => null, 'collate' => 'utf8_general_ci', 'charset' => 'utf8'),\
+          'created' => array('type' => 'datetime', 'null' => false, 'default' => null),\
+          'modified' => array('type' => 'datetime', 'null' => false, 'default' => null),\
+          'indexes' => array(\
+            'PRIMARY' => array('column' => 'id', 'unique' => 1),\
+          ),\
+          'tableParameters' => array('charset' => 'utf8', 'collate' => 'utf8_general_ci', 'engine' => 'InnoDB'),\
+        ),\
+      ),\
+    ),\
+    'down' => array(\
+      'drop_table' => array(\
+        'profiles'\
+      ),\
+    ),\
+  );\
+\
+/**\
+ * Before migration callback\
+ *\
+ * @param string $direction, up or down direction of migration process\
+ * @return boolean Should process continue\
+ */\
+  public function before($direction) \{\
+    return true;\
+  \}\
+\
+/**\
+ * After migration callback\
+ *\
+ * @param string $direction, up or down direction of migration process\
+ * @return boolean Should process continue\
+ */\
+  public function after($direction) \{\
+    return true;\
+  \}\
+\}\
+\
+---\
+\
+> initial migration\
+Generating Migration...\
+\
+Done.\
+Do you want update the schema.php file? (y/n)\
+\
+---\
+\
+[y] > y\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Cake Schema Shell\
+--------------------------------------------------------------\
+Generating Schema...\
+Schema file: schema.php generated\
+\
+---\
+\
+CREATE TABLE groups (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  name VARCHAR(255) NOT NULL,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+CREATE TABLE profiles (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  title VARCHAR(100) NOT NULL,\
+  content TEXT,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+ALTER TABLE profiles ADD COLUMN group_id INT NULL;\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+\
+class Group extends AppModel \{\
+\}\
+\
+---\
+\
+$ Console/cake Migrations.migration generate\
+:) ~/html/skelapp $ mig generate\
+Cake Migration Shell\
+--------------------------------------------------------------\
+Do you want compare the schema.php file to the database? (y/n)\
+[y] > y\
+--------------------------------------------------------------\
+Comparing schema.php to the database...\
+Do you want to preview the file before generation? (y/n)\
+[y] > n\
+Please enter the descriptive name of the migration to generate:  \
+> adding groups\
+Generating Migration...\
+\
+Done.\
+Do you want update the schema.php file? (y/n)\
+[y] > y\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Cake Schema Shell\
+--------------------------------------------------------------\
+Generating Schema...\
+Schema file exists.\
+[O]verwrite\
+[S]napshot\
+[Q]uit\
+Would you like to do? (o/s/q)\
+[s] > o\
+Schema file: schema.php generated\
+\
+---\
+\
+/**\
+ * After migration callback\
+ *\
+ * @param string $direction, up or down direction of migration process\
+ * @return boolean Should process continue\
+ */\
+  public function after($direction) \{\
+    return true;\
+  \}\
+\
+---\
+\
+public function after($direction) \{\
+  $groups = array(\
+    \'91CakePHP\'92,\
+    \'91PHP\'92,\
+    \'91Servers\'92,\
+    \'91Personal\'92\
+  );\
+  $data = array();\
+  if ($direction === \'91up\'92) \{\
+    //now adding all missing products\
+    foreach ($groups as $name) \{\
+      $data[] = compact(\'91name\'92);\
+    \}\
+    $Group = $this->generateModel(\'91Group\'92);\
+    $saveResult = $Group->saveMany($data);\
+    return $saveResult;\
+  \}\
+  return true;\
+\}\
+\
+---\
+\
+$ Console/cake Migrations.migration run down\
+Cake Migration Shell\
+--------------------------------------------------------------\
+Running migrations:\
+ [1400846198] 1400846198_adding_groups\
+     > Dropping table groups.\
+     > Dropping field group_id from profiles.\
+--------------------------------------------------------------\
+All migrations have completed.\
+\
+$ Console/cake Migrations.migration run all\
+Cake Migration Shell\
+--------------------------------------------------------------\
+Running migrations:\
+ [1400846198] 1400846198_adding_groups\
+     > Creating table groups.\
+     > Adding field group_id to profiles.\
+--------------------------------------------------------------\
+All migrations have completed.\
+\
+---\
+\
+mysql> select * from myapp.groups;\
++----+----------+---------------------+---------------------+\
+| id | name     | created             | modified            |\
++----+----------+---------------------+---------------------+\
+|  1 | CakePHP  | 2014-05-23 16:55:00 | 2014-05-23 16:55:00 |\
+|  2 | PHP      | 2014-05-23 16:55:00 | 2014-05-23 16:55:00 |\
+|  3 | Servers  | 2014-05-23 16:55:00 | 2014-05-23 16:55:00 |\
+|  4 | Personal | 2014-05-23 16:55:00 | 2014-05-23 16:55:00 |\
++----+----------+---------------------+---------------------+\
+4 rows in set (0.00 sec)\
+\
+---\
+\
+foreach ($groups as $name) \{\
+  $data[] = compact(\'91name\'92);\
+\}\
+$Group = $this->generateModel(\'91Group\'92);\
+$saveResult = $Group->saveMany($data);\
+\
+---\
+\
+$Group->saveMany($data)\
+\
+---\
+$ Console/cake Migrations.migration run all --connection admin\
+\
+---\
+\
+}

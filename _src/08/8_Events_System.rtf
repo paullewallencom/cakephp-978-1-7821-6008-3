@@ -1,0 +1,728 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;\f1\fnil\fcharset0 Calibri;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue10;\red0\green0\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri-618
+
+\f0\fs20 \cf2 <?php\
+App::uses('AppModel', 'Model');\
+\
+class Package extends AppModel \{\
+\
+  //...\
+\
+  public function afterSave($created, $options = array()) \{\
+    parent::afterSave($created, $options);\
+    if ($created) \{\
+      CakeEmail::deliver('admin@myapp.com',\
+        __('New Package was created id: %s', Hash::get($this->data, 'Package.id')),\
+        __('New package was created'),\
+        'default'\
+      );\
+\
+    \}\
+  \}\
+\}\
+\
+---\
+<?php\
+App::uses(\'91CakeEventListener\'92, \'91Event\'92);\
+App::uses(\'91CakeEmail\'92, \'91Network/Email\'92);\
+\
+class EmailAlert extends Object implements CakeEventListener \{\
+\
+  public function implementedEvents() \{\
+    return array(\
+      \'91App.Model.Package.afterSave\'92 => \'91sendEmailAlert\'92,\
+    );\
+  \}\
+\
+  public function sendEmailAlert($event) \{\
+\
+    $alias = $event->subject->alias;\
+    $id = $event->subject->data[$alias][$event->subject->primaryKey];\
+    CakeEmail::deliver('admin@myapp.com',\
+      __('New %s created id: %s', $alias, $id),\
+      __('New %s was created', $alias),\
+      'default'\
+    );\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses(\'91ClassRegistry\'92, \'91Utility\'92);\
+App::uses(\'91EmailAlert\'92, \'91Lib/Event\'92);\
+    \
+ClassRegistry::init(\'91Package\'92)->getEventManager()->attach(new EmailAlert());\
+\
+---\
+\
+config(\'91events\'92);\
+\
+---\
+\
+public function afterSave($created, $options = array()) \{\
+  parent::afterSave($created, $options);\
+  if ($created) \{\
+    // create a new event\
+    $event = new CakeEvent(\'91App.Model.Package.afterSave\'92,     $this);\
+    // dispatch the event to the Package event manager\
+    $this->getEventManager()->dispatch($event);\
+  \}\
+\}\
+\
+---\
+\
+$this->getEventManager()->dispatch($event);\
+\
+---\
+\
+$event = new CakeEvent(\'91event-name-here\'92, $this, array(\
+  \'91key1\'92 => $value1,\
+  \'91key2\'92 => $value2\
+));\
+\
+---\
+\
+public function sendEmailAlert($event) \{\
+  $data1 = $event->data[\'91key1\'92];\
+  $data2 = $event->data[\'91key2\'92];\
+\}\
+\
+---\
+\
+$ git submodule add git://github.com/ceeram/CakePdf.git app/Plugin/CakePdf\
+\
+---\
+\
+CakePlugin::load(\'91CakePdf\'92, array(\
+  \'91bootstrap\'92 => true,\
+  \'91routes\'92 => true\
+));\
+\
+---\
+\
+\pard\pardeftab720\sa120
+
+\f1\fs22 \cf2 onfigure::write(\'91CakePdf\'92, array(\
+\pard\pardeftab720\li360\ri-618
+
+\f0\fs20 \cf2   \'91engine\'92 => \'91CakePdf.DomPdf\'92,\
+  \'91download\'92 => true // forces PDF file download\
+));\
+Configure::write('App.defaultSender', 'app@example.com');\
+Configure::write(\'91App.defaultRecipient\'92, \'91{\field{\*\fldinst{HYPERLINK "mailto:me@example.com"}}{\fldrslt \cf3 \ul \ulc0 me@example.com}}\'92);\
+\
+---\
+\
+<div id=\'94pdf\'94>\
+  <h1><?php echo __(\'91Order\'92); ?></h1>\
+  <?php echo $this->fetch(\'91content\'92); ?>\
+</div>\
+\
+---\
+\
+<h3><?php echo __(\'91This is your new Package order\'92); ?>\
+<table>\
+  <?php\
+  echo $this->Html->tableHeaders(array(\
+    \'91Id\'92,\
+    \'91Address\'92\
+  ));\
+  echo $this->Html->tableCells(array(\
+    array(\
+      $package[\'91Package\'92][\'91id\'92],\
+      $package[\'91Package\'92][\'91address\'92]\
+    )\
+  ));\
+  ?>\
+</table>\
+\
+---\
+\
+CREATE TABLE packages (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  recipient VARCHAR(255) NOT NULL,\
+  address VARCHAR(255) NOT NULL,\
+  created DATETIME DEFAULT NULL,\
+  modified DATETIME DEFAULT NULL,\
+  fragile TINYINT(1) NOT NULL DEFAULT '0',\
+  category_id INT NOT NULL DEFAULT '0',\
+  active TINYINT(1) NOT NULL DEFAULT '1',\
+  PRIMARY KEY (id)\
+);\
+\
+---\
+\
+public function afterSave($created, $options = array()) \{\
+  parent::afterSave($created, $options);\
+  if ($created) \{\
+    // create a new event\
+    $event = new CakeEvent(\'91App.Model.Package.afterSave\'92,     $this);\
+    // dispatch the event to the Package event manager\
+    $this->getEventManager()->dispatch($event);\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('ClassRegistry', 'Utility');\
+App::uses('PDFGenerator', 'Lib/Event');\
+App::uses('EmailAlert', 'Lib/Event');\
+\
+ClassRegistry::init('Package')->getEventManager()->attach(new PDFGenerator());\
+ClassRegistry::init('Package')->getEventManager()->attach(new EmailAlert());\
+\
+---\
+\
+config(\'91events\'92);\
+\
+---\
+\
+<?php\
+App::uses(\'91CakeEventListener\'92, \'91Event\'92);\
+App::uses(\'91CakePdf\'92, \'91CakePdf.Pdf\'92);\
+\
+class PDFGenerator extends Object implements CakeEventListener \{\
+\
+  public function implementedEvents() \{\
+    return array(\
+      \'91App.Model.Package.afterSave\'92 => \'91generatePDF\'92,\
+    );\
+  \}\
+  public function generatePDF($event) \{\
+    $CakePdf = new CakePdf();\
+    $CakePdf->template('/Packages/pdf/package', 'order');\
+    $CakePdf->viewVars(array(\
+      'package' => $event->subject->data\
+    ));\
+    $filePath = APP . 'files' . DS . String::uuid() . '.pdf';\
+    if ($CakePdf->write($filePath)) \{\
+      $results = (array)$event->result;\
+      $results['PDFGenerator']['generatedPDF'] = $filePath;\
+\
+      return $results;\
+    \}\
+    throw new CakeException(__('Unable to generate PDF File for Package'));\
+  \}\
+\}\
+---\
+\
+\pard\pardeftab720\sa120
+
+\f1\fs22 \cf2 public function sendEmailAlert($event) \{\
+\pard\pardeftab720\li360\ri-618
+
+\f0\fs20 \cf2     $results = (array)$event->result;\
+    $filePath = Hash::get($results, 'PDFGenerator.generatedPDF');\
+\
+    if (!empty($filePath)) \{\
+      // send attachment\
+      $Email = new CakeEmail();\
+      $Email->template(\'91attachment\'92, \'91default\'92)\
+        ->emailFormat(\'91html\'92)\
+        ->from(Configure::read('App.defaultSender'))\
+        ->to(Configure::read(\'91App.defaultRecipient\'92))\
+        ->subject(__('Your new package'))\
+        ->attachments(array(\'91Package.pdf\'92 => $filePath))\
+        ->send();\
+    \}\
+  \}\
+\
+---\
+\
+<?php\
+  echo __('Please check the attached file');\
+\
+---\
+\
+public function afterSave($created, $options = array()) \{\
+  parent::afterSave($created, $options);\
+  if ($created) \{\
+    // create a new event\
+    $event = new CakeEvent(\'91App.Model.Package.afterSave\'92, $this);\
+    // dispatch the event to the local event manager\
+    $this->getEventManager()->dispatch($event);\
+  \}\
+\}\
+\
+---\
+\
+ClassRegistry::init(\'91Package\'92)->getEventManager()->attach(new PDFGenerator());\
+ClassRegistry::init(\'91Package\'92)->getEventManager()->attach(new EmailAlert());\
+\
+---\
+\
+public function implementedEvents() \{\
+  return array(\
+    \'91App.Model.Package.afterSave\'92 => \'91generatePDF\'92,\
+  );\
+\}\
+\
+---\
+\
+public function generatePDF($event) \{\
+  $CakePdf = new CakePdf();\
+  $CakePdf->template('/Packages/pdf/package', 'order');\
+  $CakePdf->viewVars(array(\
+    'package' => $event->subject->data\
+  ));\
+  $filePath = APP . 'files' . DS . String::uuid() . '.pdf';\
+  if ($CakePdf->write($filePath)) \{\
+    $results = (array)$event->result;\
+    $results['PDFGenerator']['generatedPDF'] = $filePath;\
+\
+    return $results;\
+  \}\
+  throw new CakeException(__('Unable to generate PDF File for Package'));\
+\}\
+\
+---\
+\
+$CakePdf->viewVars(array(\
+  'package' => $event->subject->data\
+));\
+\
+---\
+\
+$results = (array)$event->result;\
+\
+$filePath = Hash::get($results, 'PDFGenerator.generatedPDF');\
+\
+---\
+\
+$Email = new CakeEmail();\
+$Email->template(\'91attachment\'92, \'91default\'92)\
+  ->emailFormat(\'91html\'92)\
+  ->from(Configure::read('App.defaultSender'))\
+  ->to(Configure::read(\'91App.defaultRecipient\'92))\
+  ->subject(__('Your new package'))\
+  ->attachments(array(\'91Package.pdf\'92 => $filePath))\
+  ->send();\
+\
+---\
+\
+$this->getEventManager()->dispatch($event);\
+\
+---\
+\
+$ git submodule add git://github.com/kamisama/Cake-Resque.git app/Plugin/CakeResque\
+$ cd app/Plugin/CakeResque\
+$ curl -s https://getcomposer.org/installer | php\
+$ php composer.phar install\
+\
+---\
+\
+CakePlugin::load(\'91CakeResque\'92, array(\'91bootstrap\'92 => true));\
+// load CakeResque config overrides\
+Configure::load('cake_resque');\
+\
+---\
+\
+<?php\
+$config['CakeResque'] = array(\
+  'Redis' => array(\
+    'host' => 'localhost', // Redis server hostname\
+    'port' => 6379, // Redis server port\
+    'database' => 0, // Redis database number\
+    'namespace' => 'resque' // Redis keys namespace\
+  ),\
+  'Worker' => array(\
+    'queue' => 'default', // Name of the default queue\
+    'interval' => 5, // Number of second between each poll\
+    'workers' => 1, // Number of workers to create\
+    'log' => TMP . 'logs' . DS . 'resque-worker-error.log',\
+    'verbose' => false\
+  ),\
+  'Job' => array(\
+    'track' => true\
+  ),\
+  // NOTE: to restart, use\
+  // echo "all" | Console/cake CakeResque.CakeResque stop && Console/cake CakeResque.CakeResque load\
+  'Queues' => array(\
+    array(\
+      'queue' => 'pdf', // Use default values from above for missing interval and count indexes\
+      'interval' => 1,\
+    ),\
+  ),\
+  'Resque' => array(\
+    'lib' => 'kamisama/php-resque-ex',\
+    'tmpdir' => App::pluginPath('CakeResque') . 'tmp' . DS\
+  ),\
+  'Env' => array(),\
+  'Log' => array(\
+    'handler' => 'RotatingFile',\
+    'target' => TMP . 'logs' . DS . 'resque.log'\
+  ),\
+  'Scheduler' => array(\
+    'enabled' => false,\
+    'lib' => 'kamisama/php-resque-ex-scheduler',\
+    'log' => TMP . 'logs' . DS . 'resque-scheduler-error.log',\
+    'Env' => array(),\
+    'Worker' => array(\
+      'interval' => 3\
+    ),\
+    'Log' => array(\
+      'handler' => 'RotatingFile',\
+      'target' => TMP . 'logs' . DS . 'resque-scheduler.log'\
+    )\
+  ),\
+  'Status' => array(\
+    'lib' => 'kamisama/resque-status',\
+  )\
+);\
+\
+---\
+\
+<?php\
+App::uses(\'91AppShell\'92, \'91Console/Command\'92);\
+\
+class PdfShell extends AppShell \{\
+\
+  public function main() \{\
+    $this->out($this->getOptionParser()->help());\
+  \}\
+\
+  public function perform()\{\
+    $this->initialize();\
+    $this->\{array_shift($this->args)\}();\
+  \}\
+\
+  public function processPdfJob() \{\
+    list($modelName, $id) = $this->args;\
+\
+    $Model = ClassRegistry::init($modelName);\
+    $Model->id = $id;\
+    if (!$Model->exists()) \{\
+      throw new OutOfBoundsException(__(\'91%s not found\'92, $modelName));\
+    \}\
+    // process PDF generation\
+    $this->out(\'91<info>Starting PDF Generation...</info>\'92);\
+    // slow processing takes place here...\
+    // Save status of the pdf generation to the database\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses(\'91ClassRegistry\'92, \'91Utility\'92);\
+App::uses(\'91CakeResque\'92, \'91CakeResque.Lib\'92);\
+\
+ClassRegistry::init(\'91Package\'92)->getEventManager()->attach(function($event) \{\
+  CakeResque::enqueue(\'91pdf\'92, \'91PdfShell\'92, array(\
+    \'91processPdfJob\'92,\
+    $event->subject->alias,\
+    $event->subject->id\
+  ));\
+\}, \'91App.Model.Package.afterSave\'92);\
+\
+---\
+\
+config(\'91events\'92);\
+\
+---\
+\
+public function afterSave($created, $options = array()) \{\
+  parent::afterSave($created, $options);\
+  if ($created) \{\
+    //create a new event\
+    $event = new CakeEvent(\'91App.Model.Package.afterSave\'92, $this);\
+    //dispatch the event to the Package event manager\
+    $this->getEventManager()->dispatch($event);\
+  \}\
+\}\
+\
+---\
+\
+public function debug_queue() \{\
+  $result = $this->Package->save(array(\
+    \'91Package\'92 => array(\
+      \'91recipient\'92 => \'91John Smith\'92,\
+      \'91address\'92 => \'91Collins Ave., Dallas, TX\'92\
+    )\
+  ));\
+  debug(\'91just saved a new package\'92);\
+  debug($result);\
+  $this->_stop();\
+\}\
+\
+---\
+\
+$ Console/cake CakeResque.CakeResque load\
+Loading predefined workers\
+Starting worker ... Done\
+\
+---\
+\
+$ Console/cake CakeResque.CakeResque stats\
+Resque Statistics\
+--------------------------------------------------------------\
+\
+Jobs Stats\
+  Processed Jobs: 0\
+  Failed Jobs: 0\
+\
+Queues Stats\
+  Queues count: 0\
+\
+Workers Stats\
+  Workers count: 1\
+   REGULAR WORKERS\
+   * mirror-12:21545: pdf\
+      - Started on: Wed Jun 04 15:26:26 CEST 2014\
+      - Processed Jobs: 0\
+      - Failed Jobs: 0\
+\
+---\
+\
+$ sudo service redis-server start\
+\
+---\
+\
+\'91Queues\'92 => array(\
+  array(\
+    \'91queue\'92 => \'91pdf\'92,\
+    \'91interval\'92 => 1\
+  )\
+)\
+\
+---\
+\
+public function processPdfJob() \{\
+  \
+list($modelName, $id) = $this->args;\
+  $Model = ClassRegistry::init($modelName);\
+  $Model->id = $id;\
+  if (!$Model->exists()) \{\
+    throw new OutOfBoundsException(__(\'91%s not found\'92, $modelName));\
+  \}\
+  // process PDF generation\
+  $this->out(\'91<info>Starting PDF Generation...</info>\'92);\
+  // slow processing takes place here\'85\
+  // Save status of the pdf generation to the database      \
+\}\
+\
+---\
+\
+$event->subject->alias,\
+$event->subject->id\
+\
+---\
+\
+ClassRegistry::init(\'91Package\'92)->getEventManager()->attach(function($event) \{\
+  CakeResque::enqueue(\'91pdf\'92, \'91PdfShell\'92, array(\
+    \'91processPdfJob\'92,\
+    $event->subject->alias,\
+    $event->subject->id\
+  ));\
+\}, \'91App.Model.Package.afterSave\'92);\
+\
+---\
+\
+$ Console/cake CakeResque.CakeResque load\
+\
+---\
+\
+$event = new CakeEvent(\'91App.Model.Package.afterSave\'92, $this);\
+\
+---\
+\
+CakeResque::enqueue(\'91pdf\'92, \'91PdfShell\'92, array(\
+  \'91processPdfJob\'92,\
+  $event->subject->alias,\
+  $event->subject->id\
+));\
+\
+---\
+\
+$ cat app/tmp/logs/resque-worker-error.log \
+Starting PDF Generation...\
+\
+---\
+\
+CREATE TABLE packages (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  recipient VARCHAR(255) NOT NULL,\
+  address VARCHAR(255) NOT NULL,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses(\'91AppModel\'92, \'91Model\'92);\
+\
+class Package extends AppModel \{\
+\
+  public function afterSave($created, $options = array()) \{\
+    parent::afterSave($created, $options);\
+    if ($created) \{\
+      // create a new event\
+      $event = new CakeEvent(\'91App.Model.Package.afterSave\'92, $this);\
+      // dispatch the event to the local event manager\
+      $this->getEventManager()->dispatch($event);\
+    \}\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses(\'91ClassRegistry\'92, \'91Utility\'92);\
+App::uses(\'91PDFGenerator\'92, \'91Lib/Event\'92);\
+App::uses(\'91EmailReport\'92, \'91Lib/Event\'92);\
+\
+ClassRegistry::init(\'91Package\'92)->getEventManager()->attach(new PDFGenerator());\
+ClassRegistry::init(\'91Package\'92)->getEventManager()->attach(new EmailAlert());\
+\
+---\
+\
+config(\'91events\'92);\
+\
+---\
+\
+<?php\
+App::uses(\'91CakeEventListener\'92, \'91Event\'92);\
+\
+class PDFGenerator extends Object implements CakeEventListener \{\
+\
+  public function implementedEvents() \{\
+    return array(\
+      \'91App.Model.Package.afterSave\'92 => \'91generatePDF\'92,\
+    );\
+  \}\
+\
+  public function generatePDF($event) \{\
+    debug(\'91we should be generating a PDF file now ...\'92);\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses(\'91CakeEventListener\'92, \'91Event\'92);\
+\
+class EmailAlert extends Object implements CakeEventListener \{\
+\
+  public function implementedEvents() \{\
+    return array(\
+      \'91App.Model.Package.afterSave\'92 => \'91sendEmailAlert\'92,\
+    );\
+  \}\
+\
+  public function sendEmailAlert($event) \{\
+    debug(\'91we should be sending an email here ...\'92);\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses(\'91AppController\'92, \'91Controller\'92);\
+\
+class PackagesController extends AppController \{\
+\
+  public function debug_events() \{\
+    $result = $this->Package->save(array(\
+      \'91Package\'92 => array(\
+        \'91recipient\'92 => \'91John Smith\'92,\
+        \'91address\'92 => \'91Collins Ave., Dallas, TX\'92\
+      )\
+    ));\
+    debug(\'91just saved a new package\'92);\
+    debug($result);\
+    $this->_stop();\
+  \}\
+\}\
+\
+---\
+\
+public function implementedEvents() \{\
+  return array(\
+    \'91App.Model.Package.afterSave\'92 => array(\
+      \'91callable\'92 => \'91sendEmailAlert\'92,\
+      \'91priority\'92 => 5\
+    )\
+  );\
+\}\
+\
+---\
+\
+public function sendEmailAlert($event) \{\
+  debug(\'91we should be sending an email here ...\'92);\
+  debug(\'91and now we are not processing the PDF generation logic\'92);\
+  $event->stopPropagation();\
+\}\
+\
+---\
+\
+public function afterSave($created, $options = array()) \{\
+  parent::afterSave($created, $options);\
+  if ($created) \{\
+    $event = new CakeEvent(\'91App.Model.Product.afterSave\'92, $this);\
+    $this->getEventManager()->dispatch($event);\
+    if ($event->isStopped()) \{\
+      debug(\'91event propagation stopped\'92);\
+    \}\
+  \}\
+\}\
+\
+---\
+\
+public function implementedEvents() \{\
+  return array(\
+    \'91App.Model.Package.afterSave\'92 => array(\
+      \'91callable\'92 => \'91sendEmailAlert\'92,\
+      \'91priority\'92 => 5\
+    )\
+  );\
+\}\
+\
+---\
+\
+public function sendEmailAlert($event) \{\
+  debug(\'91we should be sending an email here ...\'92);\
+  debug(\'91and now we are not processing the PDF generation logic\'92);\
+  $event->stopPropagation();\
+\}\
+\
+---\
+\
+$this->getEventManager()->dispatch($event);\
+if ($event->isStopped()) \{\
+  debug(\'91event propagation stopped\'92);\
+\}\
+\
+---\
+\
+<?php\
+App::uses(\'91ClassRegistry\'92, \'91Utility\'92);\
+App::uses(\'91EmailAlert\'92, \'91Lib/Event\'92);\
+\
+//Attaching anonymous Listener, including priority\
+ClassRegistry::init(\'91Product\'92)->getEventManager()->attach(function($event) \{\
+  $EmailAlert = new EmailAlert();\
+  return $EmailAlert->sendEmailAlert($event);\
+\}, \'91App.Model.Product.afterSave\'92, array(\'91priority\'92 => 5));\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+}

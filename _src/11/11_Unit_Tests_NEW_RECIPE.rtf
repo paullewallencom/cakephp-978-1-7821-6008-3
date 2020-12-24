@@ -1,0 +1,480 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri-618\sa50
+
+\f0\fs19 \cf0 CREATE TABLE tasks (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  name VARCHAR(255) NOT NULL,\
+  description TEXT NOT NULL,\
+  created DATETIME NOT NULL,\
+  modified DATETIME NOT NULL,\
+  priority TINYINT(4) NOT NULL DEFAULT '1',\
+  PRIMARY KEY (id)\
+);\
+\
+---\
+\
+<?php\
+App::uses(\'91AppModel\'92, \'91Model\'92);\
+App::uses(\'91CakeEmail\'92, \'91Network/Email\'92);\
+\
+class Task extends AppModel \{\
+\
+  public function afterSave($created, $options = array()) \{\
+    parent::afterSave($created, $options);\
+    if ($created) \{\
+      $adminEmail = Configure::read(\'91App.adminEmail\'92);\
+      $replyEmail = Configure::read(\'91App.replyEmail\'92);\
+      $Email = new CakeEmail();\
+      $Email->from($replyEmail)\
+        ->to($adminEmail)\
+        ->subject(__(\'91New Task created\'92))\
+        ->send(__(\'91A new task was created\'92));\
+    \}\
+  \}\
+\}\
+\
+---\
+\
+protected $_email = null;\
+\
+---\
+\
+public function getEmail() \{\
+  return $this->_email;\
+\}\
+\
+public function setEmail(CakeEmail $email) \{\
+  $this->_email = $email;\
+\}\
+\
+---\
+\
+public function afterSave($created, $options = array()) \{\
+  parent::afterSave($created, $options);\
+  if ($created) \{\
+    $adminEmail = Configure::read(\'91App.adminEmail\'92);\
+    $replyEmail = Configure::read(\'91App.replyEmail\'92);\
+    $Email = $this->getEmail(); // notice the new call here\
+    $Email->from($replyEmail)\
+      ->to($adminEmail)\
+      ->subject(__(\'91New Task created\'92))\
+      ->send(__(\'91A new task was created\'92));\
+  \}\
+\}\
+\
+---\
+\
+CREATE TABLE blogs (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  title VARCHAR(255) NOT NULL,\
+  content TEXT,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses(\'91AppModel\'92, \'91Model\'92);\
+\
+class Blog extends AppModel \{\
+\}\
+\
+---\
+\
+$ Console/cake bake fixture -t default\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : app\
+Path: /home/user/app/\
+--------------------------------------------------------------\
+--------------------------------------------------------------\
+Bake Fixture\
+Path: /home/user/app/Test/Fixture/\
+--------------------------------------------------------------\
+Possible Models based on your current database:\
+1. Blog\
+Enter a number from the list above,\
+type in the name of another model, or 'q' to exit  \
+[q] >\
+\
+---\
+\
+[q] > 1\
+Would you like to import schema for this fixture? (y/n)\
+[n] >\
+\
+---\
+\
+[n] > n\
+Would you like to use record importing for this fixture? (y/n)\
+[n] >\
+\
+---\
+\
+[n] > n\
+Would you like to build this fixture with data from Blog's table? (y/n)\
+[n] >\
+\
+---\
+\
+[n] > n\
+\
+Baking test fixture for Blog...\
+\
+Creating file /home/user/app/Test/Fixture/BlogFixture.php\
+Wrote `/home/user/app/Test/Fixture/BlogFixture.php`\
+$\
+\
+---\
+\
+<?php\
+/**\
+ * BlogFixture\
+ *\
+ */\
+class BlogFixture extends CakeTestFixture \{\
+\
+/**\
+ * Fields\
+ *\
+ * @var array\
+ */\
+  public $fields = array(\
+    \'91id\'92 => array(\'91type\'92 => \'91integer\'92, \'91null\'92 => false, \'91default\'92 => null, \'91unsigned\'92 => false, \'91key\'92 => \'91primary\'92),\
+    \'91title\'92 => array(\'91type\'92 => \'91string\'92, \'91null\'92 => false, \'91default\'92 => null, \'91collate\'92 => \'91utf8_general_ci\'92, \'91charset\'92 => \'91utf8\'92),\
+    \'91content\'92 => array(\'91type\'92 => \'91text\'92, \'91null\'92 => false, \'91default\'92 => null, \'91collate\'92 => \'91utf8_general_ci\'92, \'91charset\'92 => \'91utf8\'92),\
+    \'91created\'92 => array(\'91type\'92 => \'91datetime\'92, \'91null\'92 => false, \'91default\'92 => null),\
+    \'91modified\'92 => array(\'91type\'92 => \'91datetime\'92, \'91null\'92 => false, \'91default\'92 => null),\
+    \'91indexes\'92 => array(\
+      \'91PRIMARY\'92 => array(\'91column\'92 => \'91id\'92, \'91unique\'92 => 1)\
+    ),\
+    \'91tableParameters\'92 => array(\'91charset\'92 => \'91utf8\'92, \'91collate\'92 => \'91utf8_general_ci\'92, \'91engine\'92 => \'91InnoDB\'92)\
+  );\
+\
+/**\
+ * Records\
+ *\
+ * @var array\
+ */\
+  public $records = array(\
+    array(\
+      \'91id\'92 => 1,\
+      \'91title\'92 => \'91Lorem ipsum dolor sit amet\'92,\
+      \'91content\'92 => \'91Lorem ipsum dolor ...\'92,\
+      \'91created\'92 => \'912014-05-20 12:06:40\'92,\
+      \'91modified\'92 => \'912014-05-20 12:06:40\'92\
+    ),\
+    // there are 9 more generated records\
+  );\
+\}\
+\
+---\
+\
+public $records = array(\
+  array(\
+    \'91id\'92 => 1,\
+    \'91title\'92 => \'91Title of the first Blog\'92,\
+    \'91content\'92 => \'91Contents for the first Blog\'92,\
+    \'91created\'92 => \'912014-05-24 12:06:40\'92,\
+    \'91modified\'92 => \'912014-05-24 12:06:40\'92\
+  ),\
+  array(\
+    \'91id\'92 => 2,\
+    \'91title\'92 => \'91Title of the second Blog\'92,\
+    \'91content\'92 => \'91Contents for the second Blog\'92,\
+    \'91created\'92 => \'912014-05-24 12:06:40\'92,\
+    \'91modified\'92 => \'912014-05-24 12:06:40\'92\
+  )\
+);\
+\
+---\
+\
+<?php\
+App::uses(\'91AppModel\'92, \'91Model\'92);\
+\
+class Blog extends AppModel \{\
+\}\
+\
+---\
+\
+<?php\
+App::uses('Blog', 'Model');\
+\
+class AnotherTest extends CakeTestCase \{\
+\
+  public function testDummy() \{\
+    App::uses(\'91Blog\'92, \'91Model\'92);\
+    // using the real Blog model now\
+    $Blog = ClassRegistry::init(\'91Blog\'92);\
+    // we use $Blog object as a dependency for other objects in this test\
+    // $this->Another->setBlog($Blog);\
+    // run some test code in $this->Another object\
+  \}\
+\}\
+\
+---\
+\
+public function testDummy() \{\
+  App::uses(\'91Blog\'92, \'91Model\'92);\
+  // using the mock object now\
+  $Blog = $this->getMockBuilder(\'91Blog\'92)\
+    ->disableOriginalConstructor()\
+    ->setMethods(array(\'91save\'92, \'91find\'92))\
+    ->setMockClassName('Blog')\
+    ->setConstructorArgs(array())\
+    ->getMock();\
+  // we use $Blog object as a dependency for other objects in this test\
+  // $this->Another->setBlog($Blog);\
+  // run some test code in $this->Another object\
+\}\
+\
+---\
+\
+// modify the class name of the new Mock Object\
+->setMockClassName($name)\
+// pass params to the constructor\
+->setConstructorArgs(array())\
+\
+---\
+\
+<?php\
+App::uses(\'91AppModel\'92, \'91Model\'92);\
+\
+class Blog extends AppModel \{\
+\}\
+\
+---\
+\
+<?php\
+App::uses('Blog', 'Model');\
+\
+class AnotherTest extends CakeTestCase \{\
+\
+  public function testDummy() \{\
+    App::uses(\'91Blog\'92, \'91Model\'92);\
+    $Blog = $this->getMockBuilder(\'91Blog\'92)\
+      ->disableOriginalConstructor()\
+      ->setMethods(array(\'91save\'92, \'91find\'92))\
+      ->getMock();\
+    // we use $Blog object as a dependency for other objects in     this test\
+    // $this->Another->setBlog($Blog);\
+    // run some test code in $this->Another object\
+  \}\
+\}\
+\
+---\
+\
+$Blog->expects($this->once());\
+\
+---\
+\
+$Blog->expects($this->once())\
+  ->method(\'91save\'92);\
+\
+---\
+\
+$Blog->expects($this->once())\
+  ->method(\'91save\'92)\
+  ->with($this->equalTo(array(\
+    \'91Blog\'92 => array(\
+      \'91title\'92 => \'91My Blog Title\'92,\
+      \'91content\'92 => \'91Blog contents here...\'92\
+    )\
+  )));\
+\
+---\
+\
+$Blog->expects($this->once()) // we expect to be called once\
+  ->method(\'91save\'92)\
+  ->with($this->equalTo(array(\
+    \'91Blog\'92 => array(\
+      \'91title\'92 => \'91My Blog Title\'92,\
+      \'91content\'92 => \'91Blog contents here...\'92\
+    )\
+  )))\
+  ->will($this->returnValue(array(\
+    \'91Blog\'92 => array(\
+      \'91id\'92 => 1,\
+      \'91title\'92 => \'91My Blog Title\'92,\
+      \'91content\'92 => \'91Blog contents here...\'92,\
+      \'91created\'92 => \'912015-01-01 10:00:00\'92,\
+      \'91modified\'92 => \'912015-01-01 10:00:00\'92,\
+    )\
+  )));\
+\
+---\
+\
+array(\
+  \'91Blog\'92 => array(\
+    \'91title\'92 => \'91My Blog Title\'92,\
+    \'91content\'92 => \'91Blog contents here...\'92\
+  )\
+)\
+\
+---\
+\
+CREATE TABLE tasks (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  name VARCHAR(255) NOT NULL,\
+  description TEXT NOT NULL,\
+  created DATETIME NOT NULL,\
+  modified DATETIME NOT NULL,\
+  priority TINYINT(4) NOT NULL DEFAULT '0',\
+  PRIMARY KEY (id)\
+);\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+App::uses('CakeEmail', 'Network/Email');\
+\
+class Task extends AppModel \{\
+\
+  protected $_email = null;\
+\
+  const PRIORITY_LOW = 0;\
+\
+  const PRIORITY_HIGH = 1;\
+\
+  public function getEmail() \{\
+    return $this->_email;\
+  \}\
+\
+  public function setEmail(CakeEmail $email) \{\
+    $this->_email = $email;\
+  \}\
+\
+  public function afterSave($created, $options = array()) \{\
+    parent::afterSave($created, $options);\
+    if ($created) \{\
+      $priority = (int)Hash::get($this->data, "\{$this->alias\}.priority");\
+      if ($priority === self::PRIORITY_HIGH) \{\
+        $this->_sendEmail();\
+      \}\
+    \}\
+  \}\
+\
+  protected function _sendEmail() \{\
+    $adminEmail = Configure::read('App.adminEmail');\
+    $replyEmail = Configure::read('App.replyEmail');\
+    $Email = $this->getEmail();\
+    $Email->from($replyEmail)\
+      ->to($adminEmail)\
+      ->subject(__('New Task created'))\
+      ->send(__('A new task was created'));\
+  \}\
+\}\
+\
+---\
+\
+Configure::write(\'91App.adminEmail\'92, \'91user@localhost.com\'92);\
+Configure::write(\'91App.replyEmail\'92, \'91user@localhost.com\'92);	\
+\
+---\
+\
+<?php\
+App::uses('Task', 'Model');\
+\
+class TaskTest extends CakeTestCase \{\
+\
+  public function setUp() \{\
+    parent::setUp();\
+    $this->Task = ClassRegistry::init('Task');\
+  \}\
+\
+  public function tearDown() \{\
+    unset($this->Task);\
+    parent::tearDown();\
+  \}\
+\
+/**\
+ * testAfterSaveShouldSendEmailForNewPriorityHighTask\
+ *\
+ * @covers Task::afterSave\
+ */\
+  public function testAfterSaveShouldSendEmailForNewPriorityHighTask() \{\
+    $this->Task = $this->getMockForModel('Task', array('_sendEmail'));\
+    $this->Task->expects($this->once())\
+      ->method('_sendEmail')\
+      ->will($this->returnValue(true));\
+    $data = array(\
+      'Task' => array(\
+        'name' => 'priority task',\
+        'description' => 'description1',\
+        'priority' => Task::PRIORITY_HIGH,\
+      )\
+    );\
+    $this->Task->set($data);\
+    $this->Task->afterSave(true);\
+  \}\
+\
+/**\
+ * testAfterSaveShouldNotSendEmailForNewPriorityLowTask\
+ *\
+ * @covers Task::afterSave\
+ */\
+  public function testAfterSaveShouldNotSendEmailForNewPriorityLowTask() \{\
+    $this->Task = $this->getMockForModel('Task', array('_sendEmail'));\
+    $this->Task->expects($this->never())\
+      ->method('_sendEmail');\
+    $data = array(\
+      'Task' => array(\
+        'name' => 'low priority task',\
+        'description' => 'description1',\
+        'priority' => Task::PRIORITY_LOW,\
+      )\
+    );\
+    $this->Task->set($data);\
+    $this->Task->afterSave(true);\
+  \}\
+\}\
+\
+---\
+\
+$ Console/cake test app Model/Task --testdox\
+\
+Welcome to CakePHP v2.5.2 Console\
+---------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+---------------------------------------------------------------\
+CakePHP Test Shell\
+---------------------------------------------------------------\
+Task\
+ [x] After save should send email for new priority high task\
+ [x] After save should not send email for new priority low task\
+\
+---\
+\
+$this->Task = $this->getMockForModel('Task', array('_sendEmail'));\
+\
+---\
+\
+$this->Task->expects($this->once())\
+  ->method('_sendEmail')\
+  ->will($this->returnValue(true));\
+\
+---\
+\
+$data = array(\
+  \'91Task\'92 => array(\
+    \'91name\'92 => \'91priority task\'92,\
+    \'91description\'92 => \'91description1\'92,\
+    \'91priority\'92 => Task::PRIORITY_HIGH,\
+  )\
+);\
+$this->Task->set($data);\
+\
+---\
+\
+$this->Task->afterSave(true);\
+\
+}

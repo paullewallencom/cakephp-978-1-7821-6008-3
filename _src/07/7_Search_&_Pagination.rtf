@@ -1,0 +1,450 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri-618
+{\field{\*\fldinst{HYPERLINK "http://localhost/myapp/packages/index/page:3"}}{\fldrslt 
+\f0\fs20 \cf2 \ul \ulc0 http://localhost/myapp/packages/index/page:3}}
+\f0\fs20 \
+\
+---\
+\
+\pard\pardeftab720\li360\ri-618
+{\field{\*\fldinst{HYPERLINK "http://localhost/myapp/packages/index?page=3"}}{\fldrslt \cf2 \ul \ulc0 http://localhost/myapp/packages/index?page=3}}\
+\
+---\
+\
+INSERT INTO packages (recipient, address, created, modified)\
+VALUES\
+('Recipient 1', 'Sunset Boulevard 1, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 2', 'Sunset Boulevard 2, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 3', 'Sunset Boulevard 3, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 4', 'Sunset Boulevard 4, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 5', 'Sunset Boulevard 5, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 6', 'Sunset Boulevard 6, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 7', 'Sunset Boulevard 7, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 8', 'Sunset Boulevard 8, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 9', 'Sunset Boulevard 9, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 10', 'Sunset Boulevard 10, Los Angeles, CA', NOW(), NOW()),\
+('Recipient 11', 'Sunset Boulevard 11, Los Angeles, CA', NOW(), NOW());\
+\
+---\
+\
+public $components = array('Paginator');\
+\
+public $helpers = array('Paginator');\
+\
+public function index() \{\
+  $this->Paginator->settings = array(\
+    'Package' => array(\
+      'paramType' => 'querystring',\
+      'imit' => 5,\
+      'order' => array(\
+        'Package.recipient' => 'asc'\
+      )\
+    )\
+  );\
+  $this->set('packages', $this->Paginator->paginate());\
+\}\
+\
+---\
+\
+<div class="packages index">\
+  <h2><?php echo __(\'91Packages\'92); ?></h2>\
+  <table>\
+  <tr>\
+    <th><?php echo $this->Paginator->sort(\'91recipient\'92); ?></th>\
+    <th><?php echo $this->Paginator->sort(\'91address\'92); ?></th>\
+    <th><?php echo $this->Paginator->sort(\'91modified\'92); ?></th>\
+    <th class="actions"><?php echo __(\'91Actions\'92); ?></th>\
+  </tr>\
+    <?php foreach ($packages as $package): ?>\
+  <tr>\
+    <td><?php echo h($package[\'91Package\'92][\'91recipient\'92]); ?>&nbsp;</td>\
+    <td><?php echo h($package[\'91Package\'92][\'91address\'92]); ?>&nbsp;</td>\
+    <td><?php echo h($package[\'91Package\'92][\'91modified\'92]); ?>&nbsp;</td>\
+    <td class="actions">\
+      <?php echo $this->Html->link(__(\'91View\'92), array(\'91action\'92 => \'91view\'92, $package[\'91Package\'92][\'91id\'92])); ?>\
+    </td>\
+  </tr>\
+<?php endforeach; ?>\
+  </table>\
+  <p>\
+  <?php\
+  echo $this->Paginator->counter(array(\
+    \'91format\'92 => \'91range\'92\
+  ));\
+  ?>    \
+  </p>\
+  <div class="paging">\
+  <?php\
+  echo $this->Paginator->prev(\'91< \'91 . __(\'91Previous Page\'92), array(), null, array(\'91class\'92 => \'91prev disabled\'92));\
+  echo $this->Paginator->next(__(\'91Next Page\'92) . \'91 >\'92, array(), null, array(\'91class\'92 => \'91next disabled\'92));\
+  ?>\
+  </div>\
+</div>\
+\
+---\
+\
+public $components = array(\'91Paginator\'92);\
+\
+public $helpers = array(\'91Paginator\'92);\
+\
+---\
+\
+<?php\
+  echo $this->Form->create(\'91Package\'92, array(\'91action\'92 => \'91search\'92));\
+  if (!isset($searchQuery)) \{\
+    $searchQuery = \'91\'92;\
+  \}\
+  echo $this->Form->input(\'91searchQuery\'92, array(\'91value\'92 => h($searchQuery)));\
+  echo $this->Form->end(__(\'91Search\'92));\
+?>\
+\
+---\
+\
+public function search() \{\
+  if ($this->request->is(\'91put\'92) || $this->request->is(\'91post\'92)) \{\
+    // poor man's Post Redirect Get behavior\
+    return $this->redirect(array(\
+      \'91?\'92 => array(\
+        \'91q\'92 => $this->request->data(\'91Package.searchQuery\'92)\
+      )\
+    ));\
+  \}\
+  $this->Package->recursive = 0;\
+  $searchQuery = $this->request->query(\'91q\'92);\
+  $this->Paginator->settings = array(\
+    \'91Package\'92 => array(\
+      \'91findType\'92 => \'91search\'92,\
+      \'91searchQuery\'92 => $searchQuery\
+    )\
+  );\
+  $this->set(\'91packages\'92, $this->Paginator->paginate());\
+  $this->set(\'91searchQuery\'92, $searchQuery);\
+  $this->render(\'91index\'92);\
+\}\
+\
+---\
+\
+public $findMethods = array(\'91search\'92 => true);\
+\
+protected function _findSearch($state, $query, $results = array()) \{\
+  if ($state === \'91before\'92) \{\
+    $searchQuery = Hash::get($query, \'91searchQuery\'92);\
+    $searchConditions = array(\
+      \'91or\'92 => array(\
+        "\{$this->alias\}.recipient LIKE" => \'91%\'92 . $searchQuery . \'91%\'92,\
+        "\{$this->alias\}.address LIKE" => \'91%\'92 . $searchQuery . \'91%\'92\
+      )\
+    );\
+    $query[\'91conditions\'92] = array_merge($searchConditions, (array)$query[\'91conditions\'92]);\
+    return $query;\
+  \}\
+  return $results;\
+\}\
+\
+---\
+\
+$this->Paginator->settings = array(\
+  \'91Package\'92 => array(\
+    \'91findType\'92 => \'91search\'92,\
+    \'91searchQuery\'92 => $searchQuery\
+  )\
+);\
+\
+---\
+\
+$searchQuery = Hash::get($query, \'91searchQuery\'92);\
+$searchConditions = array(\
+  \'91or\'92 => array(\
+    "\{$this->alias\}.recipient LIKE" => \'91%\'92 . $searchQuery . \'91%\'92,\
+    "\{$this->alias\}.address LIKE" => \'91%\'92 . $searchQuery . \'91%\'92\
+  )\
+);\
+$query[\'91conditions\'92] = array_merge($searchConditions, (array)$query[\'91conditions\'92]);\
+return $query;\
+\
+---\
+\
+$ git submodule add git://github.com/CakeDC/search.git app/Plugin/Search\
+\
+---\
+\
+CakePlugin::load(\'91Search\'92);\
+\
+---\
+\
+ALTER TABLE categories ADD packages_fragile_count INT(20) UNSIGNED NOT NULL DEFAULT '0';\
+\
+---\
+\
+public $components = array(\'91Paginator\'92);\
+\
+public function index() \{\
+  $this->set(\'91categories\'92, $this->Paginator->paginate());\
+\}\
+\
+---\
+\
+<div class="packages index">\
+  <h2><?php echo __(\'91Categories\'92); ?></h2>\
+  <table>\
+    <tr>\
+      <th><?php echo $this->Paginator->sort(\'91name\'92); ?></th>\
+      <th><?php echo $this->Paginator->sort(\'91packages_fragile_count\'92); ?></th>\
+      <th class="actions"><?php echo __(\'91Actions\'92); ?></th>\
+    </tr>\
+    <?php foreach ($categories as $category): ?>\
+      <tr>\
+        <td><?php echo h($category[\'91Category\'92][\'91name\'92]); ?>&nbsp;</td>\
+        <td><?php echo h($category[\'91Category\'92][\'91packages_fragile_count\'92]); ?>&nbsp;</td>\
+        <td class="actions">\
+          <?php echo $this->Html->link(__(\'91View\'92), array(\'91action\'92 => \'91view\'92, $category[\'91Category\'92][\'91id\'92])); ?>\
+        </td>\
+      </tr>\
+    <?php endforeach; ?>\
+  </table>\
+  <p>\
+    <?php\
+    echo $this->Paginator->counter(array(\
+      \'91format\'92 => \'91range\'92\
+    ));\
+    ?>    \
+  </p>\
+  <div class="paging">\
+    <?php\
+    echo $this->Paginator->prev(\'91< \'91 . __(\'91Previous Page\'92), array(), null, array(\'91class\'92 => \'91prev disabled\'92));\
+    echo $this->Paginator->next(__(\'91Next Page\'92) . \'91 >\'92, array(), null, array(\'91class\'92 => \'91next disabled\'92));\
+    ?>\
+  </div>\
+</div>\
+\
+---\
+\
+<?php\
+  echo $this->Form->create();\
+  echo $this->Form->input(\'91name\'92);\
+  echo $this->Form->input(\'91packages_fragile_count\'92, array(\'91label\'92 => __(\'91Minimum fragile packages\'92)));\
+  echo $this->Form->end(__(\'91Submit\'92));\
+?>\
+\
+---\
+\
+public $actsAs = array(\
+  \'91Search.Searchable\'92\
+);\
+\
+public $filterArgs = array(\
+  \'91name\'92 => array(\
+    \'91field\'92 => \'91Category.name\'92,\
+    \'91type\'92 => \'91like\'92\
+  ),\
+  \'91packages_fragile_count\'92 => array(\
+    \'91field\'92 => \'91Category.packages_fragile_count >=\'92,\
+    \'91type\'92 => \'91value\'92\
+  )\
+);\
+\
+---\
+\
+public $components = array(\
+  'Paginator',\
+  'Search.Prg'\
+);\
+\
+---\
+\
+public function index() \{\
+  $this->Category->recursive = 0;\
+  $this->Prg->commonProcess(null, array(\
+    \'91paramType\'92 => \'91querystring\'92\
+  ));\
+  $this->Paginator->settings = array(\
+    \'91Category\'92 => array(\
+      \'91paramType\'92 => \'91querystring\'92,\
+      \'91conditions\'92 => $this->Category->parseCriteria($this->Prg->parsedParams())\
+    )\
+  );\
+  $this->set(\'91categories\'92, $this->Paginator->paginate());\
+\}\
+\
+---\
+\
+public $actsAs = array(\
+  \'91Search.Searchable\'92\
+);\
+\
+---\
+\
+public $filterArgs = array(\
+  \'91name\'92 => array(\
+    \'91field\'92 => \'91Category.name\'92\
+    \'91type\'92 => \'91like\'92\
+  ),\
+  \'91packages_fragile_count\'92 => array(\
+    \'91field\'92 => \'91Category.packages_fragile_count >=\'92,\
+    \'91type\'92 => \'91value\'92\
+  )\
+);\
+\
+---\
+\
+public function index() \{\
+  $this->Category->recursive = 0;\
+  $this->Prg->commonProcess(null, array(\
+    \'91paramType\'92 => \'91querystring\'92\
+  ));\
+  $this->Paginator->settings = array(\
+    \'91Category\'92 => array(\
+      \'91paramType\'92 => \'91querystring\'92,\
+      \'91conditions\'92 => $this->Category->parseCriteria($this->Prg->parsedParams())\
+    )\
+  );\
+  $this->set(\'91categories\'92, $this->Paginator->paginate());\
+\}\
+\
+---\
+\
+CREATE TABLE gifts (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  title VARCHAR(255) NOT NULL,\
+  created DATETIME NOT NULL,\
+  modified DATETIME NOT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+CREATE TABLE recipients (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  name VARCHAR(255) NOT NULL,\
+  address VARCHAR(255) NOT NULL,\
+  created DATETIME,\
+  modified DATETIME,\
+  gift_id INT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO gifts (title, created, modified)\
+VALUES\
+  ('T-Shirt Grey', NOW(), NOW()),\
+  ('T-Shirt Black', NOW(), NOW()),\
+  ('Mug Small', NOW(), NOW()),\
+  ('Mug Mega', NOW(), NOW());\
+\
+INSERT INTO recipients (name, address, created, modified, gift_id)\
+VALUES\
+  ('John Doe', 'Sunset Boulevard 1, Los Angeles, CA', NOW(), NOW(), 1),\
+  ('Recipient 1', 'Hudson Street, New York', NOW(), NOW(), 2),\
+  ('Recipient 1', 'Hudson Street, New York', NOW(), NOW(), 3),\
+  ('Recipient 2', 'Collins Av., Vancouver', NOW(), NOW(), 4);\
+\
+---\
+\
+$ Console/cake bake all Gift\
+$ Console/cake bake all Recipient\
+\
+---\
+\
+<h2><?php echo __('Recipients'); ?></h2>\
+<!-- insert code below -->\
+<?php\
+  echo $this->Form->create();\
+  echo $this->Form->input('name', array('required' => false));\
+  echo $this->Form->input('address', array('required' => false));\
+  echo $this->Form->input('title', array('label' => __('Gift Title')));\
+  echo $this->Form->end(__('Submit'));\
+?>\
+\
+---\
+\
+public $components = array(\
+  \'91Paginator\'92,\
+  \'91Search.Prg\'92\
+);\
+\
+---\
+\
+public function index() \{\
+  $this->Recipient->recursive = 0;\
+  $this->Prg->commonProcess(null, array(\
+    'paramType' => 'querystring'\
+  ));\
+  $this->Paginator->settings = array(\
+    'Recipient' => array(\
+      'paramType' => 'querystring',\
+      'conditions' => $this->Recipient->parseCriteria($this->Prg->parsedParams())\
+    )\
+  );\
+  $this->set('recipients', $this->Paginator->paginate());\
+\}\
+\
+---\
+\
+public $actsAs = array(\'91Search.Searchable\'92);\
+\
+public $filterArgs = array(\
+  \'91name\'92 => array(\
+    \'91field\'92 => \'91Recipient.name\'92,\
+    \'91type\'92 => \'91like\'92\
+  ),\
+  \'91address\'92 => array(\
+    \'91field\'92 => \'91Recipient.address\'92,\
+    \'91type\'92 => \'91like\'92\
+  ),\
+  \'91title\'92 => array(\
+    \'91field\'92 => \'91Gift.title\'92,\
+    \'91type\'92 => \'91like\'92\
+  )\
+);\
+\
+---\
+\
+$this->Prg->commonProcess(null, array(\
+  \'91paramType\'92 => \'91querystring\'92\
+));\
+\
+---\
+\
+$this->Paginator->settings = array(\
+  \'91Recipient\'92 => array(\
+    \'91paramType\'92 => \'91querystring\'92,\
+    \'91conditions\'92 => $this->Recipient->parseCriteria($this->Prg->parsedParams())\
+  )\
+);\
+\
+---\
+\
+$this->set(\'91recipients\'92, $this->Paginator->paginate());\
+\
+---\
+\
+public $actsAs = array(\'91Search.Searchable\'92);\
+\
+public $filterArgs = array(\
+  \'91name\'92 => array(\
+    \'91field\'92 => \'91Recipient.name\'92,\
+    \'91type\'92 => \'91like\'92\
+  ),\
+  \'91address\'92 => array(\
+    \'91field\'92 => \'91Recipient.address\'92,\
+    \'91type\'92 => \'91like\'92\
+  ),\
+  \'91title\'92 => array(\
+    \'91field\'92 => \'91Gift.title\'92,\
+    \'91type\'92 => \'91like\'92\
+  )\
+);\
+\
+---\
+\
+/recipients?name=1&address=&title=mug\
+\
+---\
+\
+SELECT `Recipient`.`id`, `Recipient`.`name`, `Recipient`.`address`, `Recipient`.`created`, `Recipient`.`modified`, `Recipient`.`gift_id`, `Gift`.`id`, `Gift`.`title`, `Gift`.`created`, `Gift`.`modified`\
+FROM `book_25`.`recipients` AS `Recipient`\
+LEFT JOIN `book_25`.`gifts` AS `Gift` ON (`Recipient`.`gift_id` = `Gift`.`id`)\
+WHERE `Recipient`.`name` LIKE '%1%' AND `Gift`.`title` LIKE '%mug%' LIMIT 20}

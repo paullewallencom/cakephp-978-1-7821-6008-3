@@ -1,0 +1,641 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;\f1\fnil\fcharset0 Calibri;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri-618
+
+\f0\fs20 \cf0 CREATE TABLE packages (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  recipient VARCHAR(255) NOT NULL,\
+  address VARCHAR(255) NOT NULL,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+CREATE TABLE warehouses (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  name VARCHAR(255) NOT NULL,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO packages (recipient, address, created, modified)\
+VALUES\
+('John Doe', 'Sunset Boulevard 1, Los Angeles, CA', NOW(), NOW());\
+\
+INSERT INTO warehouses (name, created, modified)\
+VALUES\
+('Main Warehouse', NOW(), NOW()),\
+('Auxiliar Warehouse 1', NOW(), NOW());\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+\
+class Package extends AppModel \{\
+\}\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+\
+class Warehouse extends AppModel \{\
+\}\
+\
+---\
+\
+CREATE TABLE packages_warehouses (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  package_id INT NOT NULL,\
+  warehouse_id INT NOT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+public $hasAndBelongsToMany = array(\
+  'Warehouse' => array(\
+    'className' => 'Warehouse',\
+    'joinTable' => 'packages_warehouses',\
+    'foreignKey' => 'package_id',\
+    'associationForeignKey' => 'warehouse_id',\
+    'unique' => 'keepExisting',\
+    'conditions' => '',\
+    'fields' => '',\
+    'order' => '',\
+    'limit' => '',\
+    'offset' => '',\
+    'finderQuery' => ''\
+  )\
+);\
+---\
+\
+
+\f1\fs22 \
+
+\f0\fs20 public $hasAndBelongsToMany = array(\
+  'Package' => array(\
+    'className' => 'Package',\
+    'joinTable' => 'packages_warehouses',\
+    'foreignKey' => 'warehouse_id',\
+    'associationForeignKey' => 'package_id',\
+    'unique' => 'keepExisting',\
+    'conditions' => '',\
+    'fields' => '',\
+    'order' => '',\
+    'limit' => '',\
+    'offset' => '',\
+    'finderQuery' => ''\
+  )\
+);\
+---\
+\
+public $hasAndBelongsToMany = array(\
+  'Warehouse' => array(\
+    'className' => 'Warehouse',\
+    'joinTable' => 'packages_warehouses',\
+    'foreignKey' => 'package_id',\
+    'associationForeignKey' => 'warehouse_id',\
+    'unique' => 'keepExisting',\
+    'conditions' => '',\
+    'fields' => '',\
+    'order' => '',\
+    'limit' => '',\
+    'offset' => '',\
+    'finderQuery' => ''\
+  )\
+);\
+\
+---\
+\
+'conditions' => array('Warehouse.active' => true)\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class PackagesController extends AppController \{\
+\
+  public function debug() \{\
+    debug($this->Package->find('first', array('contain' => array('Warehouse'))));\
+    $this->autoRender = false;\
+  \}\
+\}\
+\
+---\
+\
+array(\
+  'Package' => array(\
+    'id' => '1',\
+    'recipient' => 'John Doe',\
+    'address' => 'Sunset Boulevard 1, Los Angeles, CA',\
+    'created' => '2014-06-21 13:21:14',\
+    'modified' => '2014-06-21 13:21:14'\
+  ),\
+  'Warehouse' => array(\
+    (int) 0 => array(\
+      'id' => '1',\
+      'name' => 'Main Warehouse',\
+      'created' => '2014-06-21 13:18:11',\
+      'modified' => '2014-06-21 13:18:11',\
+      'PackagesWarehouse' => array(\
+        'id' => '1',\
+        'package_id' => '1',\
+        'warehouse_id' => '1'\
+      )\
+    ),\
+    (int) 1 => array(\
+      'id' => '2',\
+      'name' => 'Auxiliar Warehouse 1',\
+      'created' => '2014-06-21 13:18:11',\
+      'modified' => '2014-06-21 13:18:11',\
+      'PackagesWarehouse' => array(\
+        'id' => '2',\
+        'package_id' => '1',\
+        'warehouse_id' => '2'\
+      )\
+    )\
+  )\
+)\
+\
+---\
+\
+ALTER TABLE packages_warehouses ADD amount INT NOT NULL DEFAULT '0';\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+\
+class Stock extends AppModel \{\
+\
+  public $useTable = 'packages_warehouses';\
+\
+  public $belongsTo = array(\
+    'Package',\
+    'Warehouse'\
+  );\
+\}\
+\
+---\
+\
+public $hasMany = array(\
+  'Stock'\
+);\
+\
+---\
+\
+CREATE TABLE categories (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  name VARCHAR(255) NOT NULL,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+INSERT INTO categories (name, created, modified)\
+VALUES\
+('Paper Box', NOW(), NOW()),\
+('Wooden Box', NOW(), NOW());\
+\
+ALTER TABLE packages ADD fragile TINYINT(1) NOT NULL DEFAULT '0';\
+ALTER TABLE packages ADD category_id INT NOT NULL DEFAULT '0';\
+UPDATE packages SET category_id = '1' WHERE id = 1;\
+\
+---\
+\
+'with' => 'Stock',\
+\
+---\
+\
+public $belongsTo = array('Category');\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+\
+class Category extends AppModel \{\
+\
+  public $hasMany = array(\
+    'Package'\
+  );\
+\}\
+\
+---\
+\
+<?php\
+App::uses('Model', 'Model');\
+\
+class AppModel extends Model \{\
+\
+  public $recursive = -1;\
+\
+  public $actsAs = array('Containable');\
+\}\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+\
+class Category extends AppModel \{\
+    \
+  //\'85\
+    \
+  /** Retrieve the Products and Warehouse array for a given $categoryId */\
+  public function getCategoryWarehouses($categoryId) \{\
+    return $this->find('first', array(\
+      'conditions' => array(\
+        "\{$this->alias\}.\{$this->primaryKey\}" => $categoryId,\
+      ),\
+      'contain' => array(\
+        'Package' => array(\
+          'Warehouse' => array(\
+            'fields' => array(\
+              'Warehouse.id',\
+              'Warehouse.name'\
+            )\
+          ),\
+          'conditions' => array(\
+            'Package.fragile' => false\
+          ),\
+          'fields' => array(\
+            'Package.id',\
+            'Package.address'\
+          )\
+        )\
+      )\
+    ));\
+  \}\
+\
+  //\'85\
+\
+\}\
+\
+--\
+\
+'contain' => array(\
+  'Package' => array(\
+    'Warehouse' => array(\
+      'fields' => array(\
+        'Warehouse.id',\
+        'Warehouse.name'\
+      )\
+    ),\
+    'conditions' => array(\
+      'Package.fragile' => false\
+    ),\
+    'fields' => array(\
+      'Package.id',\
+      'Package.address'\
+    )\
+  )\
+)\
+\
+---\
+\
+<?php\
+\
+App::uses('AppController', 'Controller');\
+\
+class CategoriesController extends AppController \{\
+\
+  public function debug() \{\
+    debug($this->Category->getCategoryWarehouses(1));\
+    $this->_stop();\
+  \}\
+\}\
+\
+---\
+\
+array(\
+  'Category' => array(\
+    'id' => '1',\
+    'name' => 'Paper Box',\
+    'created' => '2014-06-21 14:00:23',\
+    'modified' => '2014-06-21 14:00:23'\
+  ),\
+  'Package' => array(\
+    (int) 0 => array(\
+      'id' => '1',\
+      'address' => 'Sunset Boulevard 1, Los Angeles, CA',\
+      'category_id' => '1',\
+      'Warehouse' => array(\
+        (int) 0 => array(\
+          'id' => '1',\
+          'name' => 'Main Warehouse',\
+          'Stock' => array(\
+            'id' => '1',\
+            'package_id' => '1',\
+            'warehouse_id' => '1',\
+            'amount' => '0'\
+          )\
+        ),\
+        (int) 1 => array(\
+          'id' => '2',\
+          'name' => 'Auxiliar Warehouse 1',\
+          'Stock' => array(\
+            'id' => '2',\
+            'package_id' => '1',\
+            'warehouse_id' => '2',\
+            'amount' => '0'\
+          )\
+        )\
+      )\
+    )\
+  )\
+)\
+\
+---\
+\
+public $findMethods = array('latest' => true);\
+\
+protected function _findLatest($state, $query, $results = array()) \{\
+  if ($state === 'before') \{\
+    $query['conditions']['Package.fragile'] = false;\
+    $query['order'] = array('Package.created' => 'desc');\
+    $query['contain'] = array('Warehouse');\
+    return $query;\
+  \}\
+  foreach ($results as &$result) \{\
+    $warehouseCount = count($result['Warehouse']);\
+    $result = Hash::insert($result, 'Package.multiple_warehouses', $warehouseCount > 1);\
+  \}\
+  return $results;\
+\}\
+\
+---\
+\
+public function latest() \{\
+  debug($this->Package->find('latest'));\
+  $this->_stop();\
+\}\
+\
+---\
+\
+array(\
+  (int) 0 => array(\
+    'Package' => array(\
+      'id' => '1',\
+      'recipient' => 'John Doe',\
+      'address' => 'Sunset Boulevard 1, Los Angeles, CA',\
+      'created' => '2014-06-21 13:21:14',\
+      'modified' => '2014-06-21 13:21:14',\
+      'fragile' => false,\
+      'category_id' => '1',\
+      'multiple_warehouses' => true\
+    ),\
+    'Warehouse' => array(\
+      (int) 0 => array(\
+        'id' => '1',\
+        'name' => 'Main Warehouse',\
+        'created' => '2014-06-21 13:18:11',\
+        'modified' => '2014-06-21 13:18:11',\
+        'Stock' => array(\
+          'id' => '1',\
+          'package_id' => '1',\
+          'warehouse_id' => '1',\
+          'amount' => '0'\
+        )\
+      ),\
+      (int) 1 => array(\
+        'id' => '2',\
+        'name' => 'Auxiliar Warehouse 1',\
+        'created' => '2014-06-21 13:18:11',\
+        'modified' => '2014-06-21 13:18:11',\
+        'Stock' => array(\
+          'id' => '2',\
+          'package_id' => '1',\
+          'warehouse_id' => '2',\
+          'amount' => '0'\
+        )\
+      )\
+    )\
+  )\
+)\
+\
+---\
+\
+public $findMethods = array('latest' => true);\
+\
+---\
+\
+if ($state === 'before') \{\
+  $query['conditions']['Package.fragile'] = false;\
+  $query['order'] = array('Package.created' => 'desc');\
+  $query['contain'] = array('Warehouse');\
+  return $query;\
+\}\
+\
+---\
+foreach ($results as &$result) \{\
+  $warehouseCount = count($result['Warehouse']);\
+  $result = Hash::insert($result, 'Package.multiple_warehouses', $warehouseCount > 1);\
+\}\
+return $results;\
+\
+---\
+\
+ALTER TABLE packages ADD active TINYINT(1) NOT NULL DEFAULT '1';\
+ALTER TABLE warehouses ADD active TINYINT(1) NOT NULL DEFAULT '1';\
+\
+---\
+\
+UPDATE packages_warehouses SET amount = '1' WHERE id = 1;\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class StocksController extends AppController \{\
+\}\
+\
+---\
+\
+<?php\
+\
+App::uses('AppModel', 'Model');\
+\
+class Stock extends AppModel \{\
+\
+  public $useTable = 'packages_warehouses';\
+\
+  public $belongsTo = array(\
+    'Package',\
+    'Warehouse'\
+  );\
+\
+  public $findMethods = array('available' => true);\
+\
+  protected function _findAvailable($state, $query, $results = array()) \{\
+    if ($state === 'before') \{\
+      $this->bindModel(array(\
+        'belongsTo' => array(\
+          'Warehouse' => array(\
+            'conditions' => array('Warehouse.active' => true),\
+            'type' => 'inner'\
+          ),\
+          'Package' => array(\
+            'conditions' => array('Package.active' => true),\
+            'type' => 'inner'\
+          )\
+        )\
+      ));\
+      $query['conditions'] = array('Stock.amount >' => 0);\
+      $query['contain'] = array('Warehouse', 'Package');\
+      return $query;\
+    \}\
+    return $results;\
+  \}\
+\}\
+\
+---\
+\
+public function debug() \{\
+  debug($this->Stock->find('available'));\
+  $this->_stop();\
+\}\
+\
+---\
+\
+$this->bindModel(array(\
+  'belongsTo' => array(\
+    'Warehouse' => array(\
+      'conditions' => array('Warehouse.active' => true),\
+      'type' => 'inner'\
+    ),\
+    'Package' => array(\
+      'conditions' => array('Package.active' => true),\
+      'type' => 'inner'\
+    )\
+  )\
+));\
+$query[\'91conditions\'92] = array(\'91Stock.amount >\'92 => 0);\
+$query[\'91contain\'92] = array(\'91Warehouse\'92, \'91Package\'92);\
+return $query;\
+\
+---\
+\
+array(\
+  (int) 0 => array(\
+    'Stock' => array(\
+      'id' => '1',\
+      'package_id' => '1',\
+      'warehouse_id' => '1',\
+      'amount' => '1'\
+    ),\
+    'Package' => array(\
+      'id' => '1',\
+      'recipient' => 'John Doe',\
+      'address' => 'Sunset Boulevard 1, Los Angeles, CA',\
+      'created' => '2014-06-21 13:21:14',\
+      'modified' => '2014-06-21 13:21:14',\
+      'fragile' => false,\
+      'category_id' => '1',\
+      'active' => true\
+    ),\
+    'Warehouse' => array(\
+      'id' => '1',\
+      'name' => 'Main Warehouse',\
+      'created' => '2014-06-21 13:18:11',\
+      'modified' => '2014-06-21 13:18:11',\
+      'active' => true\
+    )\
+  )\
+)\
+\
+---\
+\
+SELECT\
+  `Stock`.`id`,\
+  #... rest of the list of fields here\
+FROM\
+  myapp`.`packages_warehouses` AS `Stock`\
+  inner JOIN\
+  myapp`.`packages` AS `Package` ON (`Stock`.`package_id` = `Package`.`id`\
+  AND `Package`.`active` = '1')\
+  inner JOIN\
+  myapp`.`warehouses` AS `Warehouse` ON (`Stock`.`warehouse_id` = `Warehouse`.`id`\
+  AND `Warehouse`.`active` = '1')\
+WHERE\
+  `Stock`.`amount` > 0\
+\
+---\
+\
+public function saveComplexPackages($data) \{\
+  $dataSource = $this->getDataSource();\
+  try \{\
+    $dataSource->begin();\
+    $this->_complexSave1($data);\
+    $this->_complexSave2($data);\
+    $dataSource->commit();\
+  \} catch (Exception $ex) \{\
+    $dataSource->rollback();\
+  \}\
+\}\
+\
+---\
+\
+protected function _complexSave1($data) \{\
+  $saveResult = $this->saveAssociated($data);\
+  if (!$saveResult) \{\
+    throw new OutOfBoundsException(__(\'91Unable to save %s\'92, __METHOD__));\
+  \}\
+\}\
+\
+protected function _complexSave2($data) \{\
+  // do another complex save operation\
+  return true;\
+\}\
+\
+---\
+\
+public function save() \{\
+  $data = array(\
+    'Package' => array(\
+      'recipient' => 'John Doe',\
+      'address' => 'Sunset Boulevard 1, Los Angeles, CA'\
+    ),\
+    'Warehouse' => array(\
+      array(\
+        'name' => 'Main Warehouse'\
+      )\
+    )\
+  );\
+  $this->Package->saveComplexPackages($data);\
+  $this->_stop();\
+\}\
+\
+---\
+\
+Configure::write('debug', 2);\
+\
+---\
+\
+$dataSource = $this->getDataSource();\
+\
+---\
+\
+try \{\
+  $dataSource->begin();\
+  $this->_complexSave1($data);\
+  $this->_complexSave2($data);\
+  $dataSource->commit();\
+\} catch (Exception $e) \{\
+  $dataSource->rollback();\
+\}\
+\
+\
+\
+\
+}

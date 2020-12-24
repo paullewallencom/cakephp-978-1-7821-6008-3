@@ -1,0 +1,428 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14060\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri-618
+
+\f0\fs20 \cf0 CREATE TABLE books (\
+  id VARCHAR(36) NOT NULL,\
+  name VARCHAR(100),\
+  stock INT(4),\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO books (id, name, stock, created, modified)\
+VALUES\
+('635c460a-f230-4565-8378-7cae01314e03', 'CakePHP Application', 2, NOW(), NOW()),\
+('635c4638-c708-4171-985a-743901314e03', 'PHP for Beginners', 3, NOW(), NOW()),\
+('635c49d9-917c-4eab-854f-743801314e03', 'Server Administration', 0, NOW(), NOW());\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class BooksController extends AppController \{\
+\
+  public $helpers = array('Html', 'Form');\
+\
+\}\
+\
+---\
+\
+public function index() \{\
+  $this->set('books', $this->Book->find('all', array(\
+    \'91conditions\'92 => array(\
+      'Book.stock >' => 0\
+    )\
+  )));\
+\}\
+\
+public function view($id) \{\
+  if (!($book = $this->Book->findById($id))) \{\
+    throw new NotFoundException(__('Book not found'));\
+  \}\
+  if ($book['Book']['stock'] < 1) \{\
+    throw new CakeException(__('Book not in stock'));\
+  \}\
+  $this->set(compact('book'));\
+\}\
+\
+---\
+\
+public function inventory_stock() \{\
+  $this->set('books', $this->Book->find('all'));\
+\}\
+\
+public function inventory_edit($id) \{\
+  $book = $this->Book->findById($id);\
+  if (!$book) \{\
+    throw new NotFoundException(__('Book not found'));\
+  \}\
+  if ($this->request->is('post')) \{\
+    $this->Book->id = $id;\
+    if ($this->Book->save($this->request->data)) \{\
+      $this->Session->setFlash(__('Book stock updated'));\
+      return $this->redirect(array(\
+        'prefix' => 'inventory',\
+        'action' => 'stock'\
+      ));\
+    \}\
+    $this->Session->setFlash(__('Could not update book stock'));\
+  \} else \{\
+    $this->request->data = $book;\
+  \}\
+\}\
+\
+---\
+\
+<h2><?php echo __('Books'); ?></h2>\
+<table>\
+  <tr>\
+    <th><?php echo __('Name'); ?></th>\
+    <th><?php echo __('Created'); ?></th>\
+    <th><?php echo __('Modified'); ?></th>\
+  </tr>\
+  <?php foreach ($books as $book): ?>\
+    <tr>\
+      <td>\
+        <?php\
+        echo $this->Html->link($book['Book']['name'], array('controller' => 'books', 'action' => 'view', $book['Book']['id']));\
+        ?>\
+      </td>\
+      <td>\
+        <?php\
+        echo $this->Time->nice($book['Book']['created']);\
+        ?>\
+      </td>\
+      <td>\
+        <?php\
+        echo $this->Time->nice($book['Book']['modified']);\
+        ?>\
+      </td>\
+    </tr>\
+  <?php endforeach; ?>\
+</table>\
+\
+---\
+\
+<h2><?php echo h($book['Book']['name']); ?></h2>\
+<dl>\
+  <dt><?php echo __('Stock'); ?></dt>\
+  <dd><?php echo $book['Book']['stock']; ?></dd>\
+  <dt><?php echo __('Created'); ?></dt>\
+  <dd><?php echo $this->Time->nice($book['Book']['created']); ?></dd>\
+  <dt><?php echo __('Modified'); ?></dt>\
+  <dd><?php echo $this->Time->nice($book['Book']['modified']); ?></dd>\
+</dl>\
+\
+---\
+\
+<h2><?php echo __('Books Stock'); ?></h2>\
+<table>\
+  <tr>\
+    <th><?php echo __('Name'); ?></th>\
+    <th><?php echo __('Stock'); ?></th>\
+    <th><?php echo __('Created'); ?></th>\
+  </tr>\
+  <?php foreach ($books as $book): ?>\
+    <tr>\
+      <td>\
+        <?php\
+        echo $this->Html->link($book['Book']['name'], array('prefix' => 'inventory', 'controller' => 'books', 'action' => 'edit', $book['Book']['id']));\
+        ?>\
+      </td>\
+      <td>\
+        <?php echo $book['Book']['stock']); ?>\
+      </td>\
+      <td>\
+        <?php\
+        echo $this->Time->nice($book['Book']['created']);\
+        ?>\
+      </td>\
+    </tr>\
+  <?php endforeach; ?>\
+</table>\
+\
+---\
+\
+<h2><?php echo __('Edit Stock'); ?></h2>\
+<p>\
+  <?php echo __('Book') . ':' . h($this->request->data('Book.name')); ?>\
+</p>\
+<?php\
+echo $this->Form->create('Book');\
+echo $this->Form->input('id');\
+echo $this->Form->input('stock');\
+echo $this->Form->end(__('Submit'));\
+?>\
+\
+---\
+\
+public $components = array(\
+  ...\
+  'Auth' => array(\
+    'loginRedirect' => array(\
+      'inventory' => false,\
+      'controller' => 'products'\
+    ),\
+    'logoutRedirect' => array(\
+      'inventory' => false,\
+      'controller' => 'users',\
+      'action' => 'login'\
+    ),\
+    'loginAction' => array(\
+      'inventory' => false,\
+      'controller' => 'users',\
+      'action' => 'login'\
+    )\
+  ),\
+  ...\
+);\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class ExampleController extends AppController \{\
+\}\
+\
+---\
+\
+Router::connect('/:language/:controller/:action/*', array(), array(\
+  'language' => '[a-zA-Z]\{3\}',\
+  'persist' => array('language')\
+));\
+\
+---\
+\
+public function beforeFilter() \{\
+  parent::beforeFilter();\
+  if (!empty($this->request->params['language'])) \{\
+    Configure::write('Config.language', $this->request->params['language']);\
+  \}\
+\}\
+\
+---\
+\
+public function language() \{\
+  $this->set('language', Configure::read('Config.language'));\
+\}\
+\
+---\
+\
+<h2><?php echo __('Language Setting'); ?></h2>\
+<p>\
+  <?php echo __('The current language is'); ?>: <?php echo $language; ?>\
+</p>\
+\
+---\
+\
+<?php\
+App::uses('CakeRoute', 'Routing/Route');\
+App::uses('ClassRegistry', 'Utility');\
+\
+class HeadlineRoute extends CakeRoute \{\
+\}\
+\
+---\
+\
+CREATE TABLE headlines (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  title VARCHAR(50),\
+  year SMALLINT(2) UNSIGNED NOT NULL,\
+  month SMALLINT(2) UNSIGNED NOT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO headlines (title, year, month)\
+VALUES\
+('CakePHP on top', '2013', '11'),\
+('CakeFest 2014', '2014', '08'),\
+('CakePHP going strong', '2014', '08');\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class HeadlinesController extends AppController \{\
+\}\
+\
+---\
+\
+App::uses('HeadlineRoute', 'Routing/Route');\
+\
+Router::connect('/:year/:month', array(\
+  'controller' => 'headlines',\
+  'action' => 'listing'\
+), array(\
+  'year' => '[0-9]\{4\}',\
+  'month' => '[0-1]\{0,1\}[0-9]\{1\}',\
+  'routeClass' => \'91HeadlineRoute'\
+));\
+\
+---\
+\
+public function parse($url) \{\
+  $params = parent::parse($url);\
+  if (empty($params)) \{\
+    return false;\
+  \}\
+  $cacheKey = $params['year'] . '-' . $params['month'];\
+  $headlines = Cache::remember($cacheKey, function () use ($params) \{\
+    return ClassRegistry::init('Headline')->find('all', array(\
+      'conditions' => array(\
+        'Headline.year' => (int)$params['year'],\
+        'Headline.month' => (int)$params['month']\
+      )\
+    ));\
+  \});\
+  if (!empty($headlines)) \{\
+    return $params;\
+  \}\
+  return false;\
+\}\
+\
+---\
+\
+public function listing() \{\
+  $year = $this->request->params['year'];\
+  $month = $this->request->params['month'];\
+  $headlines = Cache::read($year . '-' . $month);\
+  $this->set(compact('year', 'month', 'headlines'));\
+\}\
+\
+---\
+\
+<h2><?php echo __('Headlines for %s/%s', $year, $month); ?></h2>\
+<?php\
+$list = Hash::extract($headlines, '\{n\}.Headline.title');\
+echo $this->Html->nestedList($list);\
+\
+---\
+\
+public function match($url) \{\
+  if ($url['controller'] === 'headlines' && $url['action'] === 'listing' && !empty($url[0])) \{\
+    $headline = ClassRegistry::init('Headline')->find('first', array(\
+      'conditions' => array(\
+        'id' => $url[0]\
+      )\
+    ));\
+    if (!empty($headline)) \{\
+      $url['year'] = $headline['Headline']['year'];\
+      $url['month'] = $headline['Headline']['month'];\
+      unset($url[0]);\
+      return parent::match($url);\
+    \}\
+  \}\
+  return false;\
+\}\
+\
+---\
+\
+debug(Router::url(array('controller' => 'headlines', 'action' => 'listing', 1)));\
+\
+---\
+\
+<?php\
+App::uses('DispatcherFilter', 'Routing');\
+App::uses('ClassRegistry', 'Utility');\
+\
+class ApiDispatcher extends DispatcherFilter \{\
+\}\
+\
+---\
+\
+CREATE TABLE libraries (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  name VARCHAR(100),\
+  details TEXT,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO libraries (name, details, created, modified)\
+VALUES\
+('Cake', 'Yummy and sweet', NOW(), NOW()),\
+('Cookie', 'Browsers love cookies', NOW(), NOW()),\
+('Helper', 'Helping you all the way', NOW(), NOW());\
+\
+---\
+\
+Configure::write('Dispatcher.filters', array(\
+  'AssetDispatcher',\
+  'CacheDispatcher',\
+  'ApiDispatcher'\
+));\
+\
+---\
+\
+public $priority = 9;\
+\
+---\
+\
+public function beforeDispatch(CakeEvent $event) \{\
+  $request = $event->data['request'];\
+  $response = $event->data['response'];\
+  $url = $request->url;\
+  if (substr($url, 0, 4) === 'api/') \{\
+    try \{\
+      switch (substr($url, 4)) \{\
+        case 'libraries':\
+          $object = array(\
+            'status' => 'success',\
+            'data' => ClassRegistry::init('Library')->find('all')\
+          );\
+          break;\
+        default:\
+          throw new Exception('Unknown end-point');\
+      \}\
+    \} catch (Exception $e) \{\
+      $response->statusCode(500);\
+      $object = array(\
+        'status' => 'error',\
+        'message' => $e->getMessage(),\
+        'code' => $e->getCode()\
+      );\
+      if (Configure::read('debug') > 0) \{\
+        $object['data'] = array(\
+          'file' => $e->getFile(),\
+          'trace' => $e->getTrace()\
+        );\
+      \}\
+    \}\
+    $response->type('json');\
+    $response->body(json_encode($object));\
+    $event->stopPropagation();\
+\
+    return $response;\
+  \}\
+\}\
+\
+---\
+\
+Configure::write('Dispatcher.filters', array(\
+  'AssetDispatcher',\
+  'CacheDispatcher',\
+  'example' => array(\
+    \'91callable\'92 => function(CakeEvent $event) \{\
+      // your code here\
+    \},\
+    'on' => 'before',\
+    'priority' => 9\
+  )\
+));\
+\
+}

@@ -1,0 +1,335 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab709
+\pard\pardeftab709\li360\ri-618
+
+\f0\fs20 \cf0 <?php\
+App::uses(\'91AppController\'92, \'91Controller\'92);\
+\
+class ProductsController extends AppController \{\
+\}\
+\
+---\
+\
+<h2><?php echo h($this->fetch(\'91name\'92)); ?></h2>\
+<div>\
+  <?php echo $this->fetch(\'91content\'92); ?>\
+</div>\
+\
+---\
+\
+public function details() \{\
+  $this->set(array(\
+    \'91product\'92 => \'91Chocolate Cake\'92,\
+    \'91details\'92 => \'91An awesome product!\'92\
+  ));\
+\}\
+\
+---\
+\
+<?php\
+$this->extend(\'91/Common/base\'92);\
+$this->assign(\'91name\'92, $product);\
+?>\
+<p>\
+  <?php echo $this->get(\'91details\'92, __(\'91No details found\'92)); ?>\
+</p>\
+\
+---\
+\
+CREATE TABLE news (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  title VARCHAR(50),\
+  summary TEXT,\
+  created DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO news (title, summary, created)\
+VALUES\
+('CakePHP on top', 'Nominated as the best framework!', NOW()),\
+('Facebook buys Twitter', 'Mark becomes the first zillionaire', NOW()),\
+('The Larry peak', 'Founder of CakePHP admits beer helped his code', NOW());\
+\
+---\
+\
+<?php\
+App::uses(\'91AppController\'92, \'91Controller\'92);\
+\
+class NewsController extends AppController \{\
+\}\
+\
+---\
+\
+Router::parseExtensions(\'91xml\'92);\
+\
+---\
+\
+public $components = array(\'91RequestHandler\'92);\
+\
+---\
+\
+public function latest() \{\
+  $this->set(array(\
+    'news' => $this->News->find('all'),\
+    '_serialize' => 'news',\
+    '_rootNode' => 'latest'\
+  ));\
+\}\
+\
+---\
+\
+CakePlugin::load(\'91CakePdf\'92, array(\
+  \'91bootstrap\'92 => true,\
+  \'91routes\'92 => true\
+));\
+\
+---\
+\
+<?php\
+App::uses(\'91AppController\'92, \'91Controller\'92);\
+\
+class ReportsController extends AppController \{\
+\}\
+\
+---\
+\
+Configure::write(\'91CakePdf\'92, array(\
+  \'91engine\'92 => \'91CakePdf.DomPdf\'92,\
+  \'91download\'92 => true // forces PDF file download\
+));\
+\
+---\
+\
+public $components = array(\'91RequestHandler\'92);\
+\
+---\
+\
+public $layout = 'report';\
+\
+---\
+\
+public function download() \{\
+  $this->pdfConfig = array(\
+    \'91filename\'92 => \'91report.pdf\'92\
+  );\
+  $this->set(\'91report\'92, array(\
+    array(\'91Cake\'92, 1337, 999),\
+    array(\'91Cookie\'92, 123, 0),\
+    array(\'91Helper\'92, 101, 69)\
+  ));\
+\}\
+\
+---\
+\
+<div id=\'94pdf\'94>\
+  <h1><?php echo __(\'91Report\'92); ?></h1>\
+  <?php echo $this->fetch(\'91content\'92); ?>\
+</div>\
+\
+---\
+\
+<table>\
+  <?php\
+  echo $this->Html->tableHeaders(array(\
+    __(\'91Product\'92),\
+    __(\'91Stock\'92),\
+    __(\'91Sales\'92)\
+  ));\
+  echo $this->Html->tableCells($report);\
+  ?>\
+</table>\
+\
+---\
+\
+App::uses(\'91CakePdf\'92, \'91CakePdf.Pdf\'92);\
+\
+$CakePdf = new CakePdf();\
+$CakePdf->template(\'91example\'92, \'91report\'92);\
+$CakePdf->write(WWW_ROOT . \'91files\'92 . DS . \'91report.pdf\'92);\
+\
+---\
+\
+<?php\
+App::uses(\'91AppController\'92, \'91Controller\'92);\
+    \
+class ArticlesController extends AppController \{\
+\}\
+\
+---\
+\
+CREATE TABLE articles (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  title VARCHAR(100),\
+  content TEXT,\
+  created DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+INSERT INTO articles (title, content, created)\
+VALUES\
+('Rapid application development', 'Article content ...', NOW()),\
+('How to upload files', 'Article content ...', NOW()),\
+('Creating a plugin', 'Article content ...', NOW());\
+\
+---\
+\
+public function index() \{\
+  $articles = $this->Article->find(\'91all\'92);\
+  $count = count($articles);\
+  $this->set(compact(\'91articles\'92, \'91count\'92));\
+\}\
+\
+---\
+\
+<h2><?php echo __d('articles', 'Latest Articles'); ?></h2>\
+<p>\
+  <?php echo __dn('articles', 'There is %s article', 'There are %s articles', $count, $count); ?>\
+</p>\
+<?php echo $this->Html->nestedList(Hash::extract($articles, '\{n\}.Article')); ?>\
+\
+---\
+\
+<?php echo __d(\'91example\'92, \'91Hello, %s\'92, \'91Mark\'92); ?>\
+\
+---\
+\
+public $validate = array(\
+  \'91title\'92 => array(\
+    \'91size\'92 => array(\
+      \'91rule\'92 => array(\'91minLength\'92, 10),\
+      \'91message\'92 => \'91Your title must be at least %d characters long\'92\
+    )\
+  )\
+);\
+\
+---\
+\
+Configure::write(\'91Cache.check\'92, true);\
+\
+---\
+\
+Configure::write(\'91Dispatcher.filters\'92, array(\
+  \'91AssetDispatcher\'92,\
+  \'91CacheDispatcher\'92\
+));\
+\
+---\
+\
+<?php\
+App::uses(\'91AppController\'92, \'91Controller\'92);\
+\
+class TimestampsController extends AppController \{\
+\
+  public $components = array(\'91Session\'92);\
+\}\
+\
+---\
+\
+public $helpers = array(\
+  \'91Session\'92,\
+  \'91Cache\'92\
+);\
+\
+---\
+\
+public $cacheAction = array(\
+  \'91index\'92 => \'91+1 day\'92\
+);\
+\
+---\
+\
+public function index() \{\
+  $this->set(\'91timestamp\'92, date(\'91Y-m-d H:i:s\'92));\
+\}\
+\
+---\
+\
+public function change($text) \{\
+  $this->Session->write(\'91text\'92, $text);\
+  $this->redirect(array(\'91action\'92 => \'91index\'92));\
+\}\
+\
+---\
+\
+public function clear() \{\
+  clearCache(\'91timestamps\'92);\
+  $this->redirect(array(\'91action\'92 => \'91index\'92));\
+\}\
+\
+---\
+\
+<h2>Caching example</h2>\
+<p>\
+  Cache: <?php echo $timestamp; ?>\
+</p>\
+<p>\
+  <!--nocache-->\
+  <?php if ($this->Session->check(\'91text\'92)): ?>\
+    Text: <?php echo h($this->Session->read(\'91text\'92)); ?>\
+  <?php else: ?>\
+    <?php echo __(\'91No text defined\'92); ?>\
+  <?php endif; ?>\
+  <!--/nocache-->\
+</p>\
+\
+---\
+\
+CakePlugin::load(\'91AssetCompress\'92, array(\'91bootstrap\'92 => true));\
+\
+---\
+\
+Configure::write(\'91Dispatcher.filters\'92, array(\
+  \'91AssetDispatcher\'92,\
+  \'91CacheDispatcher\'92\
+));\
+\
+---\
+\
+[General]\
+cacheConfig = false\
+\
+[js]\
+cachePath = WEBROOT/cache/js/\
+\
+[all.js]\
+files[] = app.js\
+\
+[css]\
+cachePath = WEBROOT/cache/css/\
+\
+[all.css]\
+files[] = app.css\
+\
+---\
+\
+public $helpers = array(\'91AssetCompress.AssetCompress\'92);\
+\
+---\
+\
+echo $this->AssetCompress->css(\'91all.css\'92, array(\
+  \'91raw\'92 => (bool)Configure::read(\'91debug\'92)\
+));\
+echo $this->AssetCompress->includeCss();\
+\
+---\
+\
+<?php\
+echo $this->AssetCompress->script(\'91all.js\'92, array(\
+  \'91raw\'92 => (bool)Configure::read(\'91debug\'92)\
+));\
+echo $this->AssetCompress->includeJs();\
+echo $this->Js->writeBuffer();\
+?>\
+\
+---\
+\
+$ Console/cake AssetCompress.AssetCompress clear\
+$ Console/cake AssetCompress.AssetCompress build --force\
+}

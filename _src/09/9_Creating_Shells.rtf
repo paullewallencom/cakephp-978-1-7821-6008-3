@@ -1,0 +1,493 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;\f1\fnil\fcharset0 Calibri;}
+{\colortbl;\red255\green255\blue255;\red255\green0\blue0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab360
+\pard\pardeftab360\li360\ri-618
+
+\f0\fs20 \cf0 <?php\
+App::uses(\'91AppShell\'92, \'91Console/Command\'92);\
+\
+class PdfShell extends AppShell \{\
+\
+  public $tasks = array(\'91Generate\'92);\
+\
+  public function main() \{\
+    $this->out($this->getOptionParser()->help());\
+  \}\
+\
+  public function getOptionParser() \{\
+    $parser = parent::getOptionParser();\
+    return $parser->description(\'91My App PDF Shell\'92)\
+      ->addSubcommand('generate', array(\
+        \'91help\'92 => __(\'91Generates a new PDF file\'92),\
+        \'91parser\'92 => $this->Generate->getOptionParser()\
+      ));\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses(\'91AppShell\'92, \'91Console/Command\'92);\
+App::uses(\'91String\'92, \'91Utility\'92);\
+\
+class GenerateTask extends AppShell \{\
+\
+  public $tasks = array(\'91Generate\'92);\
+\
+  public function execute() \{\
+    $modelName = $this->args[0];\
+    $id = $this->args[1];\
+    $Model = ClassRegistry::init($modelName);\
+    $Model->id = $id;\
+    if (!$Model->exists()) \{\
+      throw new OutOfBoundsException(__(\'91%s not found\'92, $modelName));\
+    \}\
+    // process PDF generation\
+    $this->out(\'91<info>Starting PDF Generation...</info>\'92);\
+  \}\
+\
+  public function getOptionParser() \{\
+    $parser = parent::getOptionParser();\
+    return $parser->description(\'91Generate a PDF file\'92)\
+      ->addArgument(\'91model\'92, array(\
+        \'91required\'92 => true,\
+        \'91help\'92 => __(\'91Model name, example: Package\'92)))\
+      ->addArgument(\'91id\'92, array(\
+        \'91required\'92 => true,\
+        \'91help\'92 => __(\'91ID of the model being generated\'92)))\
+      ->addOption(\'91output\'92, array(\
+        \'91short\'92 => \'91o\'92,\
+        \'91default\'92 => APP . \'91files\'92 . DS . String::uuid() . \'91.pdf\'92,\
+        \'91help\'92 => __(\'91Full path for the output PDF file to be generated\'92)\
+      )\
+    );\
+  \}\
+\}\
+\
+---\
+\
+$ Console/cake pdf\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+My App PDF Shell\
+\
+Usage:\
+cake pdf [subcommand] [-h] [-v] [-q]\
+\
+Subcommands:\
+\
+generate  Generates a new PDF file\
+\
+To see help on a subcommand use `cake pdf [subcommand] --help`\
+\
+Options:\
+\
+--help, -h     Display this help.\
+--verbose, -v  Enable verbose output.\
+--quiet, -q    Enable quiet output.\
+\
+---\
+\
+$ Console/cake pdf generate -h\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Generate a PDF file\
+\
+Usage:\
+cake pdf generate [-h] [-v] [-q] [-o /home/user/myapp/files/538c7082-a578-4982-893d-24e3ebcde0a1.pdf] <model> <id>\
+\
+Options:\
+\
+--help, -h     Display this help.\
+--verbose, -v  Enable verbose output.\
+--quiet, -q    Enable quiet output.\
+--output, -o   Full path for the output PDF file to be generated\
+              (default:\
+              /home/user/myapp/files/538c7082-a578-4982-893d-24e3ebcde0a1.pdf)\
+\
+Arguments:\
+\
+model  Model name, example: Package\
+id     id of the model being generated\
+\
+---\
+\
+$ Console/cake pdf generate Package 1\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Starting PDF Generation...\
+\
+---\
+\
+$ Console/cake pdf generate --output ./out.pdf Package 1\
+$ Console/cake pdf generate Package 1 -o ./out.pdf\
+\
+---\
+\
+public function main() \{\
+  $this->out($this->getOptionParser()->help());\
+\}\
+\
+---\
+\
+$this->out(\'91<info>Starting PDF Generation...</info>\'92); \
+\
+---\
+\
+CREATE TABLE packages (\
+  id INT NOT NULL AUTO_INCREMENT,\
+  recipient VARCHAR(255) NOT NULL,\
+  address VARCHAR(255) NOT NULL,\
+  created DATETIME,\
+  modified DATETIME,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses(\'91AppModel\'92, \'91Model\'92);\
+\
+class Package extends AppModel \{\
+\}\
+\
+---\
+\
+\pard\pardeftab360\sa120
+
+\f1\fs22 \cf0 public function main() \{\
+\pard\pardeftab360\li360\ri-618
+
+\f0\fs20 \cf0     $this->out($this->getOptionParser()->help());\
+  \}\
+\
+  public function getOptionParser() \{\
+    $parser = parent::getOptionParser();\
+    return $parser->description(\'91Import shell\'92)\
+      ->addArgument(\'91inputFilePath\'92, array(\
+        \'91required\'92 => true,\
+        \'91help\'92 => __(\'91Full path for the input file\'92)))\
+      ->addArgument(\'91model\'92, array(\
+        \'91required\'92 => true,\
+        \'91help\'92 => __(\'91Model name\'92)))\
+      ->addSubcommand(\'91csv\'92, array(\
+        \'91help\'92 => __(\'91Import a CSV file\'92),\
+      )\
+    );\
+  \}\
+\
+  public function csv() \{\
+    list($inputFilePath, $modelName) = $this->args;\
+    $Model = ClassRegistry::init($modelName);\
+    $file = new File($inputFilePath);\
+    if (!$file->exists() || !$file->open()) \{\
+      throw new OutOfBoundsException(__(\'91File %s does not exist\'92, $inputFilePath));\
+    \}\
+    $errorFile = new File($inputFilePath . \'91.error.log\'92);\
+    $this->out(__(\'91Start CSV import: %s\'92, $inputFilePath));\
+    $db = $Model->getDataSource();\
+    $db->begin($Model);\
+    $headers = fgetcsv($file->handle);\
+    while (($row = fgetcsv($file->handle)) !== false) \{\
+      $data = array();\
+      foreach ($row as $index => $fieldValue) \{\
+        $header = $headers[$index];\
+        $data[$header] = $fieldValue;\
+      \}\
+      $Model->create();\
+      $Model->set($data);\
+      if (!$Model->validates()) \{\
+        $errorFile->append(__(\'91error in line "%s", %s\'92, $index, print_r($Model->validationErrors, true)));\
+      \} else \{\
+        $Model->save($data);\
+      \}\
+    \}\
+    $db->commit($Model);\
+    $this->out(__(\'91End import CSV\'92));\
+  \}\
+\}\
+\
+---\
+\
+$ Console/cake import\
+Import shell\
+\
+Usage:\
+cake import [subcommand] [-h] [-v] [-q] <inputFilePath> <model>\
+\
+Subcommands:\
+\
+csv  Import a CSV file\
+\
+To see help on a subcommand use `cake import [subcommand] --help`\
+\
+Options:\
+\
+--help, -h     Display this help.\
+--verbose, -v  Enable verbose output.\
+--quiet, -q    Enable quiet output.\
+\
+Arguments:\
+\
+inputFilePath  Full path for the input file\
+model          Model name\
+\
+---\
+\
+"recipient","address"\
+"recipient 91","address 91"\
+"recipient 92","address 92"\
+\
+---\
+\
+$ Console/cake import csv newPackages.csv Package\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp/\
+--------------------------------------------------------------\
+Start import CSV: newPackages.csv\
+End import CSV\
+\
+---\
+\
+public function main() \{\
+  $this->out($this->getOptionParser()->help());\
+\}\
+\
+---\
+\
+list($inputFilePath, $modelName) = $this->args;\
+$Model = ClassRegistry::init($modelName);\
+$file = new File($inputFilePath);\
+if (!$file->exists() || !$file->open()) \{\
+  throw new OutOfBoundsException(__(\'91File %s does not exist\'92, $inputFilePath));\
+\}\
+$errorFile = new File($inputFilePath . \'91.error.log\'92);\
+$this->out(__(\'91Start import CSV: %s\'92, $inputFilePath));\
+\
+---\
+\
+$db = $Model->getDataSource();\
+$db->begin($Model);\
+$headers = fgetcsv($file->handle);\
+while (($row = fgetcsv($file->handle)) !== false) \{\
+  $data = array();\
+  foreach ($row as $index => $fieldValue) \{\
+    $header = $headers[$index];\
+    $data[$header] = $fieldValue;\
+  \}\
+\
+---\
+\
+\pard\pardeftab360\sa120
+
+\f1\fs22 \cf0 $Model->create();\
+\pard\pardeftab360\li360\ri-618
+
+\f0\fs20 \cf0   $Model->set($data);\
+  if (!$Model->validates()) \{\
+    $errorFile->append(__(\'91error in line "%s", %s\'92, $index, print_r($Model->validationErrors, true)));\
+  \} else \{\
+    $Model->save($data);\
+  \}    \
+\}\
+$db->commit($Model);\
+$this->out(__(\'91End import CSV\'92));\
+\
+---\
+\
+ALTER TABLE packages ADD rating INT(20) UNSIGNED NOT NULL DEFAULT '0';\
+\
+---\
+\
+<?php\
+App::uses(\'91AppShell\'92, \'91Console/Command\'92);\
+\
+class RatingShell extends AppShell \{\
+\
+  public function main() \{\
+    $this->out($this->getOptionParser()->help());\
+  \}\
+\
+  public function getOptionParser() \{\
+    $parser = parent::getOptionParser();\
+    return $parser->description(\'91Rating Shell\'92)\
+      ->addSubcommand(\'91calculate\'92, array(\
+        \'91help\'92 => __(\'91Calculate ratings\'92),\
+      )\
+    );\
+  \}\
+\
+  public function calculate() \{\
+    $this->_checkLockFile();\
+    try \{\
+      $Package = ClassRegistry::init(\'91Package\'92);\
+      // potentially slow operation, data intensive\
+      $status = $Package->calculateRatings();\
+    \} catch (Exception $e) \{\
+      $this->_removeLockFile();\
+      throw $e;\
+    \}\
+    $this->_removeLockFile();\
+    return $status;\
+  \}\
+\
+  protected function _checkLockFile() \{\
+    $lock = $this->_getLockFile();\
+    if ($lock->exists()) \{\
+      $this->error(\'91Job is already working, please wait until calculate job finishes\'92);\
+    \}\
+    $lock->create();\
+  \}\
+\
+  protected function _getLockFile() \{\
+    return new File(TMP . \'91RatingShell.calculate.lock\'92);\
+  \}\
+\
+  protected function _removeLockFile() \{\
+    $lock = $this->_getLockFile();\
+    $lock->delete();\
+  \}\
+\}\
+\
+---\
+\
+public function calculateRatings() \{\
+  $totalPackages = $this->find(\'91count\'92);\
+  $index = 0;\
+  while ($index < $totalPackages) \{\
+    $package = $this->find(\'91first\'92, array(\
+      \'91fields\'92 => array(\
+        \'91id\'92\
+      ),\
+      \'91recursive\'92 => -1,\
+      \'91limit\'92 => $totalPackages,\
+      \'91page\'92 => 0,\
+      \'91offset\'92 => $index\
+    ));\
+    $this->calculateRating(Hash::get($package, \'91Package.id\'92));\
+    $index++;\
+  \}\
+  return true;\
+\}\
+\
+public function calculateRating($packageId) \{\
+  // your complex rating calculation logic here...\
+\}\
+\
+---\
+\
+$ crontab -e\
+#add this line to the end of the file\
+0  *    *    *    * cd /home/user/myapp && Console/cake rating calculate 2>> /home/user/myapp/tmp/myapp.cron.log > /dev/null\
+\
+---\
+\
+Console/cake bake all Gift\
+Console/cake bake all Recipient\
+\
+---\
+\
+public function translations() \{\
+  $defaultLang = Configure::read(\'91Config.language\'92);\
+  // switch to use English\
+  Configure::write(\'91Config.language\'92, \'91eng\'92);\
+  $message = __(\'91This is my message\'92) . \'91 in english\'92;\
+  // switch to use Spanish\
+  Configure::write(\'91Config.language\'92, \'91spa\'92);\
+  $message .= \'91<br/>\'92 . __(\'91This is my message\'92) . \'91 en espa\'f1ol\'92;\
+  $this->Session->setFlash($message);\
+  Configure::write(\'91Config.language\'92, $defaultLang);\
+  return $this->redirect(array(\'91action\'92 => \'91index\'92));\
+\}\
+\
+---\
+\
+This is my message 
+\fs18 \cf2 in english
+\fs20 \cf0 \
+This is my message 
+\fs18 \cf2 en espa\'f1ol
+\fs20 \cf0 \
+\
+---\
+\
+$ Console/cake i18n extract --exclude-plugins --merge no --extract-core no\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : myapp\
+Path: /home/user/myapp\
+--------------------------------------------------------------\
+Current paths: None\
+What is the path you would like to extract?\
+[Q]uit [D]one  \
+[/home/user/myapp/] >\
+\
+Current paths: /home/user/myapp/\
+What is the path you would like to extract?\
+[Q]uit [D]one  \
+[D] > d\
+\
+What is the path you would like to output?\
+[Q]uit  \
+[/home/user/myapp/Locale] >\
+\
+\
+Extracting...\
+--------------------------------------------------------------\
+Paths:\
+/home/user/myapp/\
+Output Directory: /home/user/myapp/Locale/\
+--------------------------------------------------------------\
+Processing /home/user/myapp/Controller/RecipientsController.php...\
+Processing /home/user/myapp/Model/AppModel.php\'85\
+\'85\
+\'85\
+\'85\
+Error: default.pot already exists in this location. Overwrite? [Y]es, [N]o, [A]ll (y/n/a)\
+[y] > y\
+\
+Done.\
+\
+---\
+\
+app/Locale/eng/LC_MESSAGES\
+app/Locale/spa/LC_MESSAGES\
+\
+---\
+\
+app/Locale/eng/LC_MESSAGES/default.po\
+app/Locale/spa/LC_MESSAGES/default.po\
+\
+---\
+\
+#: Controller/RecipientsController.php:124;127\
+msgid "This is my message"\
+msgstr "Este es mi mensaje"\
+\
+---\
+\
+Configure::write(\'91Config.language\'92, \'91spa\'92);\
+\
+---\
+\
+echo __(\'91this key does not exist in translation file or language not found\'92);\
+\
+---\
+\
+this key does not exist in translation file or language not found\
+}

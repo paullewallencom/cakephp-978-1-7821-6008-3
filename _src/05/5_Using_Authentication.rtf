@@ -1,0 +1,1288 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1187\cocoasubrtf400
+{\fonttbl\f0\fswiss\fcharset0 LucidaConsole;\f1\fnil\fcharset0 Calibri;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww26380\viewh14000\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri-618
+
+\f0\fs20 \cf0 CREATE TABLE users (\
+  id VARCHAR(36) NOT NULL,\
+  username VARCHAR(255) NOT NULL,\
+  password VARCHAR(128) NOT NULL,\
+  active TINYINT(1) DEFAULT '0',\
+  created DATETIME DEFAULT NULL,\
+  modified DATETIME DEFAULT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class AuthsController extends AppController \{\
+\
+  public $components = array(\
+    'Auth' => array(\
+      'authenticate' => array('Basic' => array(\
+        'fields' => array(\
+          'username' => 'username',\
+          'password' => 'password'\
+        ),\
+        'userModel' => 'User',\
+        'scope' => array(\
+          array('User.active' => 1)\
+        ),\
+        'recursive' => -1,\
+        'realm' => 'Speak, friend, and enter.'\
+      )),\
+      'authorize' => array('Controller')\
+    )\
+  );\
+\
+  public function beforeFilter() \{\
+    parent::beforeFilter();\
+    AuthComponent::$sessionKey = false;\
+    $this->Auth->allow('saveTestUser');\
+  \}\
+\
+  public function isAuthorized($user = null) \{\
+    return true;\
+  \}\
+\
+  public function saveTestUser() \{\
+    $data = array(\
+      'id' => 1,\
+      'username' => 'friend',\
+      'password' => Security::hash('mellon', null, true),\
+      'active' => 1\
+    );\
+    debug(ClassRegistry::init('User')->save($data));\
+    $this->autoRender = false;\
+  \}\
+\
+  public function index() \{\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+echo $this->Html->tag('h2', __('You are allowed to pass, %s', AuthComponent::user('username')));\
+\
+---\
+\
+Username: friend\
+Password: mellon\
+\
+---\
+\
+You are allowed to pass, friend\
+\
+---\
+\
+public $components = array(\
+  'Auth' => array(\
+    'authenticate' => array('Basic' => array(\
+      'fields' => array(\
+        'username' => 'username',\
+        'password' => 'password'\
+      ),\
+      'userModel' => 'User',\
+      'scope' => array(\
+        array('User.active' => 1)\
+      ),\
+      'realm' => 'Speak, friend, and enter.',\
+    )),\
+    'authorize' => array('Controller')\
+  )\
+);\
+\
+---\
+\
+array(\
+  'fields' => array(\
+    'username' => 'username',\
+    'password' => 'password'\
+  ),\
+  'userModel' => 'User',\
+  'scope' => array(\
+    array('User.active' => 1)\
+  ),\
+  'realm' => 'Speak, friend, and enter.'\
+)\
+\
+---\
+\
+'authorize' => array('Controller')\
+\
+---\
+\
+public function isAuthorized($user = null) \{\
+  return true;\
+\}\
+\
+---\
+\
+public function beforeFilter() \{\
+  parent::beforeFilter();\
+  AuthComponent::$sessionKey = false;\
+  $this->Auth->allow('saveTestUser');\
+\}\
+\
+---\
+\
+public function saveTestUser() \{\
+  $data = array(\
+    'id' => 1,\
+    'username' => 'friend',\
+    'password' => Security::hash('mellon', null, true),\
+    'active' => 1\
+  );\
+  debug(ClassRegistry::init('User')->save($data));\
+  $this->autoRender = false;\
+\}\
+\
+---\
+\
+<?php\
+echo $this->Html->tag('h2', __('You are allowed to pass, %s', AuthComponent::user('username')));\
+\
+---\
+\
+CREATE TABLE users (\
+  id VARCHAR(36) NOT NULL,\
+  username VARCHAR(255) NOT NULL,\
+  password VARCHAR(128) NOT NULL,\
+  active TINYINT(1) DEFAULT '0',\
+  is_admin TINYINT(1) DEFAULT '0',\
+  created DATETIME DEFAULT NULL,\
+  modified DATETIME DEFAULT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class AuthsController extends AppController \{\
+\
+  public $components = array(\
+    'Auth' => array(\
+      'authenticate' => array('Basic' => array(\
+        'fields' => array(\
+          'username' => 'username',\
+          'password' => 'password'\
+        ),\
+        'userModel' => 'User',\
+        'scope' => array(\
+          array('User.active' => 1)\
+        ),\
+        'recursive' => -1,\
+        'realm' => 'Speak, friend, and enter.'\
+      )),\
+      'authorize' => array('Controller')\
+    )\
+  );\
+\
+  public function beforeFilter() \{\
+    parent::beforeFilter();\
+    AuthComponent::$sessionKey = false;\
+  \}\
+\
+  public function isAuthorized($user = null) \{\
+    return true;\
+  \}\
+\
+  public function index() \{\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+echo $this->Html->tag('h2', __('You are allowed to pass, %s', AuthComponent::user('username')));\
+\
+---\
+\
+Configure::write('Routing.prefixes', array('admin'));\
+\
+---\
+\
+<?php\
+App::uses('BaseAuthorize', 'Controller/Component/Auth');\
+\
+class AdminAuthorize extends BaseAuthorize \{\
+\
+  public function authorize($user, CakeRequest $request) \{\
+    $isAdminPrefix = (Hash::get($request->params, 'prefix') === 'admin');\
+    if (!$isAdminPrefix) \{\
+      return true;\
+    \}\
+\
+    $isAdminUser = (bool)Hash::get($user, 'is_admin');\
+    return $isAdminUser;\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class AuthsController extends AppController \{\
+\
+  public $components = array(\
+    'Auth' => array(\
+      'authenticate' => array('Basic' => array(\
+        'fields' => array(\
+          'username' => 'username',\
+          'password' => 'password'\
+        ),\
+        'userModel' => 'User',\
+        'scope' => array(\
+          array('User.active' => 1)\
+        ),\
+        'recursive' => -1,\
+        'contain' => null,\
+        'realm' => 'Speak, friend, and enter'\
+        )),\
+        'authorize' => array('Admin')\
+    )\
+  );\
+\
+  public function beforeFilter() \{\
+    AuthComponent::$sessionKey = false;\
+    $this->Auth->allow('saveTestUser');\
+  \}\
+\
+  public function saveTestUser() \{\
+    $User = ClassRegistry::init('User');\
+    $data = array(\
+        'id' => 1,\
+        'username' => 'admin',\
+        'password' => Security::hash('admin', null, true),\
+        'active' => 1,\
+        'is_admin' => 1\
+    );\
+    $User->create();\
+    $User->save($data);\
+    $data = array(\
+      'id' => 2,\
+      'username' => 'user',\
+      'password' => Security::hash('user', null, true),\
+      'active' => 1,\
+      'is_admin' => 0\
+    );\
+    $User->create();\
+    $User->save($data);\
+    $this->autoRender = false;\
+  \}\
+\
+  public function index() \{\
+    // all logged in users should have access\
+  \}\
+\
+  public function admin_index() \{\
+    // all admin users should have access\
+    $this->render('index');\
+  \}\
+\}\
+\
+---\
+\
+Username: admin\
+Password: admin\
+\
+---\
+\
+You are allowed to pass, friend\
+\
+---\
+\
+You are not authorized to access that location. \
+\
+---\
+\
+Configure::write('Routing.prefixes', array('admin'));\
+\
+---\
+\
+/admin/auths/index\
+\
+---\
+\
+public function authorize($user, CakeRequest $request) \{\
+  $isAdminPrefix = (Hash::get($request->params, 'prefix') === 'admin');\
+  if (!$isAdminPrefix) \{\
+    return true;\
+  \}\
+\
+  $isAdminUser = (bool)Hash::get($user, 'is_admin');\
+  return $isAdminUser;\
+\}\
+\
+---\
+\
+$isAdminPrefix = (Hash::get($request->params, 'prefix') === 'admin');\
+\
+---\
+\
+$isAdminUser = (bool)Hash::get($user, 'is_admin');\
+\
+---\
+\
+'authorize' => array('Admin')\
+\
+---\
+\
+app/Controller/Component/Auth/AdminAuthorize.php\
+\
+---\
+\
+public function admin_index() \{\
+  // all admin users should have access\
+  $this->render('index');\
+\}\
+\
+---\
+\
+CREATE TABLE users (\
+  id VARCHAR(36) NOT NULL,\
+  username VARCHAR(255) NOT NULL,\
+  password VARCHAR(128) DEFAULT NULL,\
+  email VARCHAR(255) DEFAULT NULL,\
+  active TINYINT(1) DEFAULT '1',\
+  created DATETIME DEFAULT NULL,\
+  modified DATETIME DEFAULT NULL,\
+  remote_id VARCHAR(255) NOT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+$ git submodule add git://github.com/uzyn/cakephp-opauth.git app/Plugin/Opauth\
+$ git submodule update --init --recursive\
+Submodule 'Vendor/Opauth' (git://github.com/uzyn/opauth.git) registered for path 'Vendor/Opauth'\
+Cloning into 'Vendor/Opauth'...\
+remote: Counting objects: 2611, done.\
+remote: Compressing objects: 100% (1155/1155), done.\
+remote: Total 2611 (delta 1111), reused 2609 (delta 1110)\
+Receiving objects: 100% (2611/2611), 507.36 KiB | 275.00 KiB/s, done.\
+Resolving deltas: 100% (1111/1111), done.\
+Checking connectivity... done.\
+Submodule path 'app/Plugin/Opauth/Vendor/Opauth': checked out 'bea7c46f7568c2f37301f284c1e907cffa03bb6b\
+\
+---\
+\
+$ cd app/Plugin/Opauth/Strategy\
+$ git clone https://github.com/opauth/facebook.git Facebook\
+\
+---\
+\
+CakePlugin::load('Opauth', array(\
+  'routes' => true,\
+  'bootstrap' => true\
+));\
+\
+Configure::write('Opauth.Strategy.Facebook', array(\
+  'app_id' => 'YOUR APP ID',\
+  'app_secret' => 'YOUR APP SECRET',\
+  'scope' => 'email'\
+));\
+\
+---\
+\
+Router::connect('/opauth-complete/*', array(\
+  'controller' => 'users',\
+  'action' => 'opauth_complete'\
+));\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class UsersController extends AppController \{\
+\
+  public function beforeFilter() \{\
+    parent::beforeFilter();\
+    $this->Auth->allow('opauth_complete');\
+  \}\
+\
+  public function opauth_complete() \{\
+    $uid = $this->request->data('auth.uid');\
+    $username = $this->request->data('auth.info.email');\
+    $user = $this->User->getRemote($uid, $username);\
+    $this->Auth->login($user['User']);\
+    $this->redirect(array('action' => 'dashboard'));\
+  \}\
+\
+  public function dashboard() \{\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+\pard\pardeftab720\li360\ri-618
+\cf0 \uldb \ulc0 \
+\pard\pardeftab720\li360\ri-618
+\cf0 \ulnone class User extends AppModel \{\
+\
+  public function getRemote($remoteId, $username) \{\
+    $user = $this->find('first', array(\
+      'conditions' => array(\
+        'remote_id' => $remoteId,\
+        'username' => $username\
+      )\
+    ));\
+    if (empty($user)) \{\
+      // register a new user\
+      $user = $this->save(array(\
+        'remote_id' => $remoteId,\
+        'username' => $username,\
+        'password' => md5(String::uuid())\
+      ));\
+    \}\
+    return $user;\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+echo $this->Html->tag('h2', __('Welcome back, %s', AuthComponent::user('username')));\
+\
+---\
+\
+<?php\
+App::uses('Controller', 'Controller');\
+\
+class AppController extends Controller \{\
+\
+  public $components = array(\
+    'Auth' => array(\
+      'authorize' => array('Controller'),\
+      'loginAction' => '/auth/facebook'\
+    )\
+  );\
+\
+  public function isAuthorized($user = null) \{\
+    return true;\
+  \}\
+\}\
+\
+---\
+\
+Welcome back, {\field{\*\fldinst{HYPERLINK "mailto:your@facebook.email.here.com"}}{\fldrslt \cf2 \ul \ulc0 your@facebook.email.here.com}}\
+\
+---\
+\
+CakePlugin::load('Opauth', array(\
+  'routes' => true,\
+  'bootstrap' => true\
+));\
+\
+Configure::write('Opauth.Strategy.Facebook', array(\
+  'app_id' => 'YOUR APP ID',\
+  'app_secret' => 'YOUR APP SECRET',\
+  'scope' => 'email'\
+));\
+\
+---\
+\
+Router::connect('/opauth-complete/*', array(\
+  'controller' => 'users',\
+  'action' => 'opauth_complete'\
+));\
+\
+---\
+\
+public function beforeFilter()\{\
+  parent::beforeFilter();\
+  $this->Auth->allow('opauth_complete');\
+\}\
+\
+---\
+\
+public function opauth_complete() \{\
+  $uid = $this->request->data('auth.uid');\
+  $username = $this->request->data('auth.info.email');\
+  $user = $this->User->getRemote($uid, $username);\
+  $this->Auth->login($user['User']);\
+  $this->redirect(array('action' => 'dashboard'));\
+\}\
+\
+---\
+\
+echo $this->Html->tag('h2', __('Welcome back, %s', AuthComponent::user('username')));\
+\
+---\
+\
+public function getRemote($remoteId, $username) \{\
+  $user = $this->find('first', array(\
+    'conditions' => array(\
+      'remote_id' => $remoteId,\
+      'username' => $username\
+    )\
+  ));\
+  if (empty($user)) \{\
+    // register a new user\
+    $user = $this->save(array(\
+      'remote_id' => $remoteId,\
+      'username' => $username,\
+      'password' => md5(String::uuid())\
+    ));\
+  \}\
+  return $user;\
+\}\
+\
+---\
+\
+public $components = array(\
+  'Auth' => array(\
+    'authorize' => array('Controller'),\
+    'loginAction' => '/auth/facebook'\
+  )\
+);\
+\
+---\
+\
+public function isAuthorized($user = null) \{\
+  return true;\
+\}\
+\
+---\
+\
+CREATE TABLE users (\
+  id VARCHAR(36) NOT NULL,\
+  username VARCHAR(255) NOT NULL,\
+  password VARCHAR(128) NOT NULL,\
+  active TINYINT(1) DEFAULT '0',\
+  created DATETIME DEFAULT NULL,\
+  modified DATETIME DEFAULT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses('Controller', 'Controller');\
+\
+class AppController extends Controller \{\
+\
+  public $components = array(\
+    'Auth' => array(\
+      'authenticate' => array('Basic' => array(\
+        'fields' => array(\
+          'username' => 'username',\
+          'password' => 'password'\
+        ),\
+        'userModel' => 'User',\
+        'scope' => array(\
+          array('User.active' => 1)\
+        ),\
+        'recursive' => -1,\
+        'contain' => null,\
+        'realm' => 'Speak, friend, and enter'\
+      )),\
+      'authorize' => array('SimpleRbac')\
+    )\
+  );\
+\
+  public function beforeFilter() \{\
+    parent::beforeFilter();\
+    AuthComponent::$sessionKey = false;\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('BaseAuthorize', 'Controller/Component/Auth');\
+\
+class SimpleRbacAuthorize extends BaseAuthorize \{\
+\
+  public function authorize($user, CakeRequest $request) \{\
+    $role = Hash::get($user, 'role');\
+    if ($role === ROLE_ADMIN) \{\
+      return true;\
+    \}\
+    $permissions = Configure::read('app.permissions.' . $this->action($request));\
+    if (empty($permissions)) \{\
+      return false;\
+    \} elseif ($permissions === '*') \{\
+      return true;\
+    \}\
+    $roles = is_array($permissions) ? $permissions : explode(',', $permissions);\
+    return in_array($role, $roles);\
+  \}\
+\}\
+\
+---\
+\
+config('permissions');\
+\
+---\
+\
+<?php\
+define('ROLE_ADMIN', 'admin');\
+define('ROLE_MANAGER', 'manager');\
+define('ROLE_REGISTERED', 'registered');\
+\
+Configure::write('app.permissions', array(\
+  'Auths/index' => '*',\
+  'Auths/admin_index' => array(ROLE_MANAGER)\
+));\
+\
+---\
+\
+ALTER TABLE users ADD role VARCHAR( 255 ) DEFAULT NULL;\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class AuthsController extends AppController \{\
+\
+  public function beforeFilter() \{\
+    parent::beforeFilter();\
+    $this->Auth->allow('saveTestUser');\
+  \}\
+\
+  public function saveTestUser() \{\
+    $User = ClassRegistry::init('User');\
+    $data = array(\
+      'id' => 1,\
+      'username' => 'admin',\
+      'password' => Security::hash('admin', null, true),\
+      'active' => 1,\
+      'role' => ROLE_ADMIN\
+    );\
+    $User->create();\
+    $User->save($data);\
+    $data = array(\
+      'id' => 2,\
+      'username' => 'registered',\
+      'password' => Security::hash('registered', null, true),\
+      'active' => 1,\
+      'role' => ROLE_REGISTERED\
+    );\
+    $User->create();\
+    $User->save($data);\
+    $this->autoRender = false;\
+  \}\
+\
+  public function index() \{\
+  \}\
+\
+  public function admin_index() \{\
+    $this->render('index');\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+echo $this->Html->tag('h2', __('You are allowed to pass, %s', AuthComponent::user('username')));\
+\
+---\
+\
+/auths/index\
+/admin/auths/index\
+\
+---\
+\
+/auths/index\
+\
+---\
+\
+'Auth' => array(\
+  'authenticate' => array('Basic' => array(\
+    'fields' => array(\
+      'username' => 'username',\
+      'password' => 'password'\
+    ),\
+    'userModel' => 'User',\
+    'scope' => array(\
+      array('User.active' => 1)\
+    ),\
+    'recursive' => -1,\
+    'contain' => null,\
+    'realm' => 'Speak, friend, and enter'\
+  )),\
+  'authorize' => array('SimpleRbac')\
+)\
+\
+---\
+\
+public function authorize($user, CakeRequest $request) \{\
+  $role = Hash::get($user, 'role');\
+  if ($role === ROLE_ADMIN) \{\
+    return true;\
+  \}\
+  $permissions = Configure::read('app.permissions.' . $this->action($request));\
+  if (empty($permissions)) \{\
+    return false;\
+  \} elseif ($permissions === '*') \{\
+    return true;\
+  \}\
+    $roles = is_array($permissions) ? $permissions : explode(',', $permissions);\
+    return in_array($role, $roles);\
+\}\
+\
+---\
+\
+Configure::write('app.permissions', array(\
+  'Auths/index' => '*',\
+  'Auths/admin_index' => array(ROLE_MANAGER)\
+));\
+\
+---\
+\
+CREATE TABLE users (\
+  id VARCHAR(36) NOT NULL,\
+  username VARCHAR(255) NOT NULL,\
+  password VARCHAR(128) NOT NULL,\
+  active TINYINT(1) DEFAULT '0',\
+  role_id VARCHAR(36) DEFAULT NULL,\
+  created DATETIME DEFAULT NULL,\
+  modified DATETIME DEFAULT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+CREATE TABLE roles (\
+  id VARCHAR(36) NOT NULL,\
+  name VARCHAR(255) NOT NULL,\
+  role_id VARCHAR(36) DEFAULT NULL,\
+  created DATETIME DEFAULT NULL,\
+  modified DATETIME DEFAULT NULL,\
+  PRIMARY KEY(id)\
+);\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class AuthsController extends AppController \{\
+\
+  public function index() \{\
+  \}\
+\
+  public function admin_index() \{\
+    $this->render('index');\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+echo $this->Html->tag('h2', __('You are allowed to pass, %s', AuthComponent::user('username')));\
+\
+---\
+\
+CakePlugin::load('AclExtras');\
+\
+---\
+\
+$ Console/cake acl initdb\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : app\
+Path: /home/user/app/\
+--------------------------------------------------------------\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : app\
+Path: /home/user/app/\
+--------------------------------------------------------------\
+Cake Schema Shell\
+--------------------------------------------------------------\
+\
+The following table(s) will be dropped.\
+acos\
+aros\
+aros_acos\
+Are you sure you want to drop the table(s)? (y/n)\
+[n] > y\
+Dropping table(s).\
+acos updated.\
+aros updated.\
+aros_acos updated.\
+\
+The following table(s) will be created.\
+acos\
+aros\
+aros_acos\
+Are you sure you want to create the table(s)? (y/n)\
+[y] > y\
+Creating table(s).\
+acos updated.\
+aros updated.\
+aros_acos updated.\
+End create.\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+App::uses('SimplePasswordHasher', 'Controller/Component/Auth');\
+\
+class User extends AppModel \{\
+\
+  public $belongsTo = array('Role');\
+\
+  public $actsAs = array('Acl' => array('type' => 'requester'));\
+\
+  public function parentNode() \{\
+    if (empty($this->id)) \{\
+      return null;\
+    \}\
+    $roleId = Hash::get($this->data, 'User.role_id');\
+    if (empty($roleId)) \{\
+      $roleId = $this->field('role_id');\
+    \}\
+    if (empty($roleId)) \{\
+      return null;\
+    \} else \{\
+      return array('Role' => array('id' => $roleId));\
+    \}\
+  \}\
+\
+  public function beforeSave($options = array()) \{\
+    if (!parent::beforeSave($options)) \{\
+      return false;\
+    \}\
+\
+    if (isset($this->data[$this->alias]['password'])) \{\
+      $hasher = new SimplePasswordHasher();\
+      $this->data[$this->alias]['password'] = $hasher->hash($this->data[$this->alias]['password']);\
+    \}\
+\
+    return true;\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+\
+class Role extends AppModel \{\
+\
+  public $hasMany = array('User');\
+\
+  public $actsAs = array('Acl' => array('type' => 'requester'));\
+\
+  public function parentNode() \{\
+    if (empty($this->id)) \{\
+      return null;\
+    \}\
+    $roleId = Hash::get($this->data, 'Role.role_id');\
+    if (empty($roleId)) \{\
+      $roleId = $this->field('role_id');\
+    \}\
+    if (empty($roleId)) \{\
+      return null;\
+    \} else \{\
+      return array('Role' => array('id' => $roleId));\
+    \}\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('Controller', 'Controller');\
+\
+class AppController extends Controller \{\
+\
+  public $components = array(\
+    'Acl',\
+    'Auth' => array(\
+      'authenticate' => array('Basic' => array(\
+        'fields' => array(\
+          'username' => 'username',\
+          'password' => 'password'\
+        ),\
+        'userModel' => 'User',\
+        'scope' => array(\
+           array('User.active' => 1)\
+        ),\
+        'recursive' => -1,\
+        'contain' => null,\
+        'realm' => 'Speak, friend, and enter'\
+      )),\
+      'authorize' => array('Actions' => array('actionPath' => 'controllers'))\
+    )\
+  );\
+\
+  public function beforeFilter() \{\
+    parent::beforeFilter();\
+    AuthComponent::$sessionKey = false;\
+  \}\
+\}\
+\
+---\
+\
+<?php\
+App::uses('AppController', 'Controller');\
+\
+class AuthsController extends AppController \{\
+\
+  public function beforeFilter() \{\
+    parent::beforeFilter();\
+    $this->Auth->allow('saveTestUser');\
+  \}\
+\
+  public function saveTestUser() \{\
+    $Role = ClassRegistry::init('Role');\
+    $Role->create();\
+    $Role->save(array(\
+      'id' => 1,\
+      'name' => 'registered',\
+      'role_id' => null\
+    ));\
+    $Role->create();\
+    $Role->save(array(\
+      'id' => 2,\
+      'name' => 'manager',\
+      'role_id' => 1\
+    ));\
+    $Role->create();\
+    $Role->save(array(\
+      'id' => 3,\
+      'name' => 'admin',\
+      'role_id' => 2\
+    ));\
+    $User = ClassRegistry::init('User');\
+    $User->create();\
+    $User->save(array(\
+      'id' => 1,\
+      'username' => 'admin',\
+      'password' => 'admin',\
+      'active' => 1,\
+      'role_id' => 3\
+    ));\
+    $User->create();\
+    $User->save(array(\
+      'id' => 2,\
+      'username' => 'manager',\
+      'password' => 'manager',\
+      'active' => 1,\
+      'role_id' => 2\
+    ));\
+    $User->create();\
+    $User->save(array(\
+      'id' => 3,\
+      'username' => 'registered',\
+      'password' => 'registered',\
+      'active' => 1,\
+      'role_id' => 1\
+    ));\
+    $this->autoRender = false;\
+  \}\
+\
+  public function index() \{\
+    // all logged in users should have access\
+  \}\
+\
+  public function admin_index() \{\
+    // all admin users should have access\
+    $this->render('index');\
+  \}\
+\}\
+\
+---\
+\
+TRUNCATE users;\
+TRUNCATE roles;\
+\
+---\
+\
+$ Console/cake acl view aro\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : app\
+Path: /home/user/app/\
+--------------------------------------------------------------\
+Aro tree:\
+--------------------------------------------------------------\
+  [1] Role.1\
+    [2] Role.2\
+      [3] Role.3\
+        [4] User.1\
+      [5] User.2\
+    [6] User.3\
+--------------------------------------------------------------\
+\
+---\
+\
+$ Console/cake AclExtras.acl_extras aco_sync\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : app\
+Path: /home/user/app/\
+--------------------------------------------------------------\
+Created Aco node: controllers/Auths\
+Created Aco node: controllers/Auths/saveTestUser\
+Created Aco node: controllers/Auths/index\
+Created Aco node: controllers/Auths/admin_index\
+Aco Update Complete\
+\pard\pardeftab720\sa120
+
+\f1\fs22 \cf0 Check that the ACOs were created successfully with the following command:\
+\pard\pardeftab720\li360\ri-618
+
+\f0\fs20 \cf0 $ Console/cake acl view aco\
+\
+Welcome to CakePHP v2.5.2 Console\
+--------------------------------------------------------------\
+App : app\
+Path: /home/user/app/\
+--------------------------------------------------------------\
+Aco tree:\
+--------------------------------------------------------------\
+  [1] controllers\
+    [2] Auths\
+      [3] saveTestUser\
+      [4] index\
+      [5] admin_index\
+--------------------------------------------------------------\
+\
+---\
+\
+$ Console/cake acl grant Role.3 controllers/Auths/admin_index\
+$ Console/cake acl grant Role.2 controllers/Auths/index\
+\
+---\
+\
+\pard\pardeftab720\li360\ri-618
+\cf2 \ul \ulc0 http://yoursite.com/auths/index\cf0 \ulnone \
+username: manager\
+password: manager\
+User is allowed to access this page\
+\
+\cf2 \ul \ulc0 http://yoursite.com/admin/auths/index\cf0 \ulnone \
+username: manager\
+password: manager\
+User is NOT allowed to access this page\
+\
+\cf2 \ul \ulc0 http://yoursite.com/auths/index\cf0 \ulnone \
+username: admin\
+password: admin\
+User is allowed to access this page\
+\
+\cf2 \ul \ulc0 http://yoursite.com/admin/auths/index\cf0 \ulnone \
+username: admin\
+password: admin\
+User is allowed to access this page\
+\
+\cf2 \ul \ulc0 http://yoursite.com/auths/index\cf0 \ulnone \
+username: registered\
+password: registered\
+User is NOT allowed to access this page\
+\
+\cf2 \ul \ulc0 http://yoursite.com/admin/auths/index\cf0 \ulnone \
+username: registered\
+password: registered\
+User is NOT allowed to access this page\
+\
+---\
+\
+Admin user (User.id = 1)\
+$ Console/cake acl check User.1 controllers/Auths/index\
+User.1 is allowed.\
+$ Console/cake acl check User.1 controllers/Auths/admin_index\
+User.1 is allowed.\
+\
+Manager user (User.id = 2)\
+$ Console/cake acl check User.2 controllers/Auths/index\
+User.2 is allowed.\
+$ Console/cake acl check User.2 controllers/Auths/admin_index\
+User.2 is not allowed.\
+\
+Registered user (User.id = 3)\
+$ Console/cake acl check User.3 controllers/Auths/index\
+User.3 is not allowed.\
+$ Console/cake acl check User.3 controllers/Auths/admin_index\
+User.3 is not allowed.\
+\
+---\
+\
+/controllers\
+  /AuthsController\
+    /index\
+    /admin_index\
+\
+---\
+\
+/Registered\
+  /Manager\
+    /Admin\
+      /User1 (is an admin)\
+    /User2 (is a manager)\
+  /User3 (is a registered user)\
+\
+---\
+\
+$ Console/cake acl initdb\
+\
+---\
+\
+<?php\
+App::uses('AppModel', 'Model');\
+App::uses('SimplePasswordHasher', 'Controller/Component/Auth');\
+\
+class User extends AppModel \{\
+\
+  public $belongsTo = array('Role');\
+\
+  public $actsAs = array('Acl' => array('type' => 'requester'));\
+\
+  public function parentNode() \{\
+    if (empty($this->id)) \{\
+      return null;\
+    \}\
+    $roleId = Hash::get($this->data, 'User.role_id');\
+    if (empty($roleId)) \{\
+      $roleId = $this->field('role_id');\
+    \}\
+    if (empty($roleId)) \{\
+      return null;\
+    \}else \{\
+      return array('Role' => array('id' => $roleId));\
+    \}\
+  \}\
+\
+  public function beforeSave($options = array()) \{\
+    if (!parent::beforeSave($options)) \{\
+      return false;\
+    \}\
+\
+    if (isset($this->data[$this->alias]['password'])) \{\
+      $hasher = new SimplePasswordHasher();\
+      $this->data[$this->alias]['password'] = $hasher->hash($this->data[$this->alias]['password']);\
+    \}\
+\
+    return true;\
+  \}\
+\}\
+\
+---\
+\
+public $components = array(\
+  'Acl',\
+  'Auth' => array(\
+    'authenticate' => array('Basic' => array(\
+    'fields' => array(\
+      'username' => 'username',\
+      'password' => 'password'\
+    ),\
+    'userModel' => 'User',\
+    'scope' => array(\
+      array('User.active' => 1)\
+    ),\
+    'recursive' => -1,\
+    'contain' => null,\
+    'realm' => 'Speak, friend, and enter'\
+    )),\
+    'authorize' => array('Actions' => array('actionPath' => 'controllers'))\
+  )\
+);\
+\
+---\
+\
+public function saveTestUser() \{\
+  $Role = ClassRegistry::init('Role');\
+  $Role->create();\
+  $Role->save(array(\
+    'id' => 1,\
+    'name' => 'registered',\
+    'role_id' => null\
+  ));\
+  $Role->create();\
+  $Role->save(array(\
+    'id' => 2,\
+    'name' => 'manager',\
+    'role_id' => 1\
+  ));\
+  $Role->create();\
+  $Role->save(array(\
+    'id' => 3,\
+    'name' => 'admin',\
+    'role_id' => 2\
+  ));\
+  $User = ClassRegistry::init('User');\
+  $User->create();\
+  $User->save(array(\
+    'id' => 1,\
+    'username' => 'admin',\
+    'password' => 'admin',\
+    'active' => 1,\
+    'role_id' => 3\
+  ));\
+  $User->create();\
+  $User->save(array(\
+    'id' => 2,\
+    'username' => 'manager',\
+    'password' => 'manager',\
+    'active' => 1,\
+    'role_id' => 2\
+  ));\
+  $User->create();\
+  $User->save(array(\
+    'id' => 3,\
+    'username' => 'registered',\
+    'password' => 'registered',\
+    'active' => 1,\
+    'role_id' => 1\
+  ));\
+  $this->autoRender = false;\
+\}\
+\
+---\
+\
+$ Console/cake acl view aro\
+\
+---\
+\
+$ Console/cake AclExtras.acl_extras aco_sync\
+\
+---\
+\
+$ Console/cake acl view aco\
+\
+---\
+\
+$ Console/cake acl grant Role.3 controllers/Auths/admin_index\
+$ Console/cake acl grant Role.2 controllers/Auths/index\
+\
+---\
+\
+User.1 (admin) is allowed to access controllers/Auths/admin_index because his parent role Role.3 (admin) is allowed.\
+User.1 (admin) is allowed to access controllers/Auths/index because one of his parent roles Role.2 (manager) is allowed.\
+\
+---\
+\
+/Role.1 (=Registered)\
+  /Role.2 (=Manager)\
+    /Role.3 (=Admin)\
+      /User.1\
+\
+\
+\
+\
+\
+\
+\
+}
